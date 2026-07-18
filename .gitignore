@@ -30,8 +30,23 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files (never commit secrets / machine-specific URLs)
+.env
+.env.local
 .env*.local
+.env.production
+.env.production.local
+
+# Project docs & agent instruction files (local only)
+docs/
+AGENTS.md
+CLAUDE.md
+
+# Claude Code (local only — same idea as frontend .cursor/)
+.claude/
+
+# Cursor / editor local rules that may contain private prefs
+.cursor/
 
 # typescript
 *.tsbuildinfo

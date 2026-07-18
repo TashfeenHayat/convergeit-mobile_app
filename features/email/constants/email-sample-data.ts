@@ -1,0 +1,36 @@
+import type { EmailSampleData } from "../utils/email-html-builder";
+
+export const EMAIL_TEMPLATE_SAMPLE_DATA: EmailSampleData = {
+  visitorName: "Jane Cooper",
+  visitorEmail: "visitor@example.com",
+  visitorPhone: "+1 555 0100",
+  company: "Acme Corp",
+  location: "Garden Grove, California, United States of America",
+  timezone: "America/Los_Angeles (PST)",
+  sessionId: "sess_8f3a2b1c",
+  website: "www.example.com",
+  chatTime: "09:39:01 PST",
+  agentName: "Scott",
+  duration: "7m 54s",
+  browser: "Chrome 144.0",
+  os: "Windows 11",
+  visitorId: "60643686",
+  device: "Desktop",
+  ip: "172.88.93.143",
+  leadSource: "Organic",
+  chatOrigin: "Website",
+  referrer: "https://www.google.com/",
+  landingPage: "https://www.example.com/",
+  currentPage: "https://www.example.com/contact",
+  sessionStartedAt: "Feb 26, 2026 9:38 AM PST",
+  chatId: "567550",
+  transcript: [
+    { who: "Scott", line: "Welcome! How can I help you today?" },
+    { who: "Visitor", line: "I have a question about your services." },
+  ],
+  journey: [
+    "https://www.example.com/about (02/26/26 09:38 PST)",
+    "https://www.example.com/contact (02/26/26 09:39 PST)",
+  ],
+  additionalNotes: "",
+};

@@ -1,19 +1,41 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+/**
+ * ConvergeIT mobile color tokens — aligned with web `theme.app`.
+ */
+import { appColors } from '@/theme/theme';
+
+const accentBlue = appColors.dashboard.accentBlue;
+
+export const AppColors = {
+  backgroundTop: appColors.background.top,
+  backgroundBottom: appColors.background.bottom,
+  accentBlue,
+  accentOrange: appColors.dashboard.accentOrange,
+  accentGreen: appColors.dashboard.accentGreen,
+  accentRed: appColors.dashboard.accentRed,
+  sidebarBg: appColors.dashboard.sidebarBg,
+  headerBg: appColors.dashboard.headerBg,
+  liveChatCard: appColors.dashboard.liveChat.cardBg,
+  liveChatMessage: appColors.dashboard.liveChat.messageBg,
+  textPrimary: appColors.text.primary,
+  textSecondary: appColors.text.secondary,
+  border: appColors.border.divider,
+} as const;
 
 export default {
   light: {
-    text: '#000',
+    text: '#11181C',
     background: '#fff',
-    tint: tintColorLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
+    tint: accentBlue,
+    icon: '#687076',
+    tabIconDefault: '#687076',
+    tabIconSelected: accentBlue,
   },
   dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
+    text: AppColors.textPrimary,
+    background: AppColors.backgroundBottom,
+    tint: accentBlue,
+    icon: '#9BA1A6',
+    tabIconDefault: '#9BA1A6',
+    tabIconSelected: accentBlue,
   },
 };

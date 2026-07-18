@@ -1,0 +1,32 @@
+/** Sample values for distribution test preview (matches backend template sample). */
+export const EMAIL_FORM_TEST_SAMPLE: Record<string, string> = {
+  name: "Jane Cooper",
+  email: "visitor@example.com",
+  phone: "+1 555 0100",
+  company: "Acme Corp",
+  location: "Garden Grove, California, United States of America",
+  timezone: "America/Los_Angeles (PST)",
+  session_id: "sess_8f3a2b1c",
+  website: "www.example.com",
+  chat_time: "09:39:01 PST",
+  agent: "Scott",
+  duration: "7m 54s",
+  chat_id: "567550",
+  browser: "Chrome 144.0",
+  os: "Windows 11",
+  device: "Desktop",
+  ip: "172.88.93.143",
+  visitor_id: "60643686",
+  lead_source: "Organic",
+  chat_origin: "Website",
+  referrer: "https://www.google.com/",
+  landing_page: "https://www.example.com/",
+  current_page: "https://www.example.com/contact",
+  session_started_at: "Feb 26, 2026 9:38 AM PST",
+  transcript:
+    "Scott: Welcome! How can I help you today?\nVisitor: I have a question about your services.",
+  journey:
+    "https://www.example.com/about (02/26/26 09:38 PST)\nhttps://www.example.com/contact (02/26/26 09:39 PST)",
+  notes: "",
+  rating: "",
+};

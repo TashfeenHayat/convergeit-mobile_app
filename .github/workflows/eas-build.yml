@@ -1,0 +1,77 @@
+name: EAS Native Builds
+
+# Native Android APK/AAB + iOS IPA via Expo Application Services.
+# Requires GitHub secret: EXPO_TOKEN (from https://expo.dev/settings/access-tokens)
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        required: true
+        default: preview
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: eas-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-android:
+    name: EAS Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Expo / EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS build Android
+        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive --no-wait
+
+  build-ios:
+    name: EAS iOS
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Expo / EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS build iOS
+        run: eas build --platform ios --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive --no-wait

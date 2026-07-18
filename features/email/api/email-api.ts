@@ -1,0 +1,36 @@
+/**
+ * Typed email HTTP client — wraps shared axios instance with Bearer JWT.
+ * Implementation: `@/api/email/email.api.ts`.
+ */
+export {
+  deletePlatformEmailSettings,
+  deletePlatformMailAssignment,
+  deleteResellerEmailBanner,
+  deleteResellerEmailLogo,
+  deleteResellerOwnMailSettings,
+  getEmailProviderFormSchema,
+  getPlatformEmailSettings,
+  getPlatformMailAssignment,
+  getResellerEmailTemplateDraft,
+  getResellerEmailTemplateDraftPreview,
+  getResellerEmailTemplatePublished,
+  getResellerEmailTemplatePublishedPreview,
+  getResellerEmailTemplateAssignment,
+  usePlatformEmailTemplate,
+  getResellerOwnMailSettings,
+  listEmailProviders,
+  listPlatformMailAssignments,
+  listResellerOwnMailSettings,
+  publishResellerEmailTemplateDraft,
+  testPlatformEmailSettings,
+  testResellerOwnMailSettings,
+  updatePlatformEmailSettings,
+  updatePlatformMailAssignment,
+  updateResellerEmailTemplateDraft,
+  updateResellerOwnMailSettings,
+  uploadResellerEmailBanner,
+  uploadResellerEmailLogo,
+  getPlatformAgentFeedbackSettings,
+  updatePlatformAgentFeedbackSettings,
+  listDistributionFeedbackSubmissions,
+} from "@/api/email/email.api";

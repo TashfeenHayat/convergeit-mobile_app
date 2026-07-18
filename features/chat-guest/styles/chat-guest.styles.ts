@@ -1,0 +1,93 @@
+import { StyleSheet } from "react-native";
+import { tokens } from "@/theme/tokens";
+
+export const chatGuestStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: tokens.colors.backgroundTop,
+  },
+  headerCard: {
+    margin: tokens.space.md,
+    marginBottom: tokens.space.sm,
+    padding: tokens.space.md,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.colors.cardBorder,
+    backgroundColor: tokens.colors.surface,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: tokens.space.sm,
+  },
+  centerFill: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: tokens.space.xl,
+    gap: tokens.space.md,
+  },
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: tokens.space.md,
+    paddingVertical: tokens.space.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.cardBorder,
+    backgroundColor: "rgba(88, 101, 242, 0.08)",
+  },
+  livePill: {
+    height: 18,
+    paddingHorizontal: 8,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  card: {
+    flex: 1,
+    marginHorizontal: tokens.space.md,
+    marginBottom: tokens.space.md,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.colors.cardBorder,
+    backgroundColor: tokens.colors.surface,
+    overflow: "hidden",
+  },
+  threadHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: tokens.space.sm,
+    paddingHorizontal: tokens.space.md,
+    paddingVertical: tokens.space.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.cardBorder,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(88, 101, 242, 0.18)",
+  },
+  supervisorPanel: {
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.cardBorder,
+    padding: tokens.space.md,
+    gap: tokens.space.md,
+  },
+  supervisorSectionLabel: {
+    fontWeight: "600",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+  },
+  supervisorColumn: {
+    gap: tokens.space.sm,
+    padding: tokens.space.sm,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.cardBorder,
+    backgroundColor: "rgba(255,255,255,0.02)",
+  },
+});

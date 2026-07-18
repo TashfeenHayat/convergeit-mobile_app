@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXPO_PUBLIC_API_BASE_URL: https://convergit-saas.onrender.com
+  EXPO_PUBLIC_CHAT_SOCKET_BASE_URL: https://convergit-saas.onrender.com
+  EXPO_PUBLIC_CHAT_SOCKET_NAMESPACE: /chat
+  EXPO_PUBLIC_WIDGET_EMBED_ORIGIN: https://example.com
+  EXPO_PUBLIC_APP_URL: https://example.com
+
+jobs:
+  validate:
+    name: Lint & typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Expo doctor
+        run: npx expo-doctor
+
+  build-android:
+    name: Android JS export
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export Android bundle
+        run: npm run export:android
+
+      - name: Upload Android dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-export
+          path: dist
+          if-no-files-found: error
+
+  build-ios:
+    name: iOS JS export
+    needs: validate
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export iOS bundle
+        run: npm run export:ios
+
+      - name: Upload iOS dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-export
+          path: dist
+          if-no-files-found: error
