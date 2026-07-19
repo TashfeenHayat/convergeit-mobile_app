@@ -1,5 +1,9 @@
 import { Text as RNText, type TextProps as RNTextProps, StyleSheet } from 'react-native';
 
+import {
+  authOnGlassText,
+  useAuthOnGlass,
+} from '@/components/auth/AuthOnGlassContext';
 import { useAppTheme } from '@/theme';
 import { tokens } from '@/theme/tokens';
 
@@ -28,9 +32,17 @@ export function Typography({
   ...rest
 }: TypographyProps) {
   const theme = useAppTheme();
+  const onGlass = useAuthOnGlass();
   const variantStyle = tokens.typography[variant];
   const resolvedColor =
-    color ?? (muted ? theme.app.text.secondary : theme.app.text.primary);
+    color ??
+    (onGlass
+      ? muted
+        ? authOnGlassText.secondary
+        : authOnGlassText.primary
+      : muted
+        ? theme.app.text.secondary
+        : theme.app.text.primary);
 
   return (
     <RNText

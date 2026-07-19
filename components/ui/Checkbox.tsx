@@ -1,8 +1,18 @@
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import {
+    Pressable,
+    StyleSheet,
+    View,
+    type StyleProp,
+    type ViewStyle,
+} from "react-native";
 
-import { Typography } from '@/components/ui/Typography';
-import { tokens } from '@/theme/tokens';
+import {
+  authOnGlassText,
+  useAuthOnGlass,
+} from "@/components/auth/AuthOnGlassContext";
+import { Typography } from "@/components/ui/Typography";
+import { tokens } from "@/theme/tokens";
 
 export type CheckboxProps = {
   checked: boolean;
@@ -19,6 +29,9 @@ export function Checkbox({
   disabled = false,
   style,
 }: CheckboxProps) {
+  const onGlass = useAuthOnGlass();
+  const boxBorder = onGlass ? authOnGlassText.border : tokens.colors.border;
+
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -27,9 +40,19 @@ export function Checkbox({
       onPress={() => onChange?.(!checked)}
       style={[styles.row, disabled && styles.disabled, style]}
     >
-      <View style={[styles.box, checked && styles.boxChecked]}>
+      <View
+        style={[
+          styles.box,
+          { borderColor: boxBorder },
+          checked && styles.boxChecked,
+        ]}
+      >
         {checked ? (
-          <FontAwesome name="check" size={12} color={tokens.colors.textPrimary} />
+          <FontAwesome
+            name="check"
+            size={12}
+            color={tokens.colors.textPrimary}
+          />
         ) : null}
       </View>
       {label ? (
@@ -43,8 +66,8 @@ export function Checkbox({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: tokens.space.sm,
   },
   box: {
@@ -52,10 +75,9 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: tokens.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
   },
   boxChecked: {
     backgroundColor: tokens.colors.accentBlue,
