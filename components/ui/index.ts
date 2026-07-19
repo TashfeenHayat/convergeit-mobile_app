@@ -22,6 +22,9 @@ export type { DividerProps } from './Divider';
 export { AppCard } from './AppCard';
 export type { AppCardProps } from './AppCard';
 
+export { GlassCard } from './GlassCard';
+export type { GlassCardProps } from './GlassCard';
+
 export { Label } from './Label';
 export type { LabelProps } from './Label';
 

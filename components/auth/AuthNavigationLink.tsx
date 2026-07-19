@@ -1,8 +1,8 @@
-import { Link, type Href } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Link, type Href } from "expo-router";
+import { StyleSheet, View } from "react-native";
 
-import { TextLink, Typography } from '@/components/ui';
-import { tokens } from '@/theme/tokens';
+import { TextLink, Typography } from "@/components/ui";
+import { tokens } from "@/theme/tokens";
 
 export type AuthNavigationLinkProps = {
   href: Href;
@@ -18,7 +18,7 @@ export function AuthNavigationLink({
   return (
     <View style={styles.row}>
       <Typography variant="medium" muted>
-        {prompt}{' '}
+        {prompt}{" "}
       </Typography>
       <Link href={href} asChild>
         <TextLink>{actionLabel}</TextLink>
@@ -29,10 +29,10 @@ export function AuthNavigationLink({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: tokens.space.md,
   },
 });

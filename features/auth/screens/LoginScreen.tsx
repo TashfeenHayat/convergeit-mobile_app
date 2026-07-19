@@ -1,23 +1,22 @@
-import { Link, router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Link, router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { AuthNavigationLink, AuthShell, InlineAlert } from '@/components/auth';
+import { AuthNavigationLink, AuthShell, InlineAlert } from "@/components/auth";
 import {
-  Button,
-  Checkbox,
-  // Divider,
-  InputField,
-  // SocialAuthButton,
-  TextLink,
-  // Typography,
-} from '@/components/ui';
-import { AUTH_PATHS, getAuthCardCopy } from '@/constants/auth';
-import { APP_PATHS } from '@/constants/navigation';
-import { useAuth } from '@/lib/auth';
+    Button,
+    Checkbox,
+    // Divider,
+    InputField,
+    // SocialAuthButton,
+    TextLink,
+} from "@/components/ui";
+import { AUTH_PATHS, getAuthCardCopy } from "@/constants/auth";
+import { APP_PATHS } from "@/constants/navigation";
+import { useAuth } from "@/lib/auth";
 // import { useAppTheme } from '@/theme';
 
-const copy = getAuthCardCopy('login');
+const copy = getAuthCardCopy("login");
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -28,9 +27,9 @@ export function LoginScreen() {
   // const theme = useAppTheme();
   const { login } = useAuth();
   const params = useLocalSearchParams<{ reset?: string }>();
-  const [email, setEmail] = useState('');
-  const [licenseKey, setLicenseKey] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [licenseKey, setLicenseKey] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
@@ -39,7 +38,7 @@ export function LoginScreen() {
     password?: string;
   }>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const passwordResetNotice = params.reset === 'success';
+  const passwordResetNotice = params.reset === "success";
 
   const clearAuthErrors = () => {
     setFormError(null);
@@ -48,7 +47,7 @@ export function LoginScreen() {
 
   const onEmailChange = (value: string) => {
     setEmail(value);
-    if (__DEV__) console.log('[AUTH][INPUT] email =', value);
+    if (__DEV__) console.log("[AUTH][INPUT] email =", value);
     if (formError || errors.email || errors.password || errors.licenseKey) {
       clearAuthErrors();
     }
@@ -56,7 +55,7 @@ export function LoginScreen() {
 
   const onLicenseKeyChange = (value: string) => {
     setLicenseKey(value);
-    if (__DEV__) console.log('[AUTH][INPUT] licenseKey =', value);
+    if (__DEV__) console.log("[AUTH][INPUT] licenseKey =", value);
     if (formError || errors.email || errors.password || errors.licenseKey) {
       clearAuthErrors();
     }
@@ -64,7 +63,7 @@ export function LoginScreen() {
 
   const onPasswordChange = (value: string) => {
     setPassword(value);
-    if (__DEV__) console.log('[AUTH][INPUT] password =', value);
+    if (__DEV__) console.log("[AUTH][INPUT] password =", value);
     if (formError || errors.email || errors.password || errors.licenseKey) {
       clearAuthErrors();
     }
@@ -72,14 +71,15 @@ export function LoginScreen() {
 
   const onSubmit = async () => {
     const next: typeof errors = {};
-    if (!isValidEmail(email)) next.email = 'Enter a valid email';
-    if (!licenseKey.trim()) next.licenseKey = 'License key is required';
-    if (password.length < 6) next.password = 'Password must be at least 6 characters';
+    if (!isValidEmail(email)) next.email = "Enter a valid email";
+    if (!licenseKey.trim()) next.licenseKey = "License key is required";
+    if (password.length < 6)
+      next.password = "Password must be at least 6 characters";
     setErrors(next);
     setFormError(null);
     if (Object.keys(next).length > 0) {
       if (__DEV__) {
-        console.log('[AUTH][LOGIN] blocked by client validation:', next);
+        console.log("[AUTH][LOGIN] blocked by client validation:", next);
       }
       return;
     }
@@ -87,7 +87,7 @@ export function LoginScreen() {
     setSubmitting(true);
     try {
       if (__DEV__) {
-        console.log('[AUTH][LOGIN] Sign in pressed with inputs:', {
+        console.log("[AUTH][LOGIN] Sign in pressed with inputs:", {
           email: email.trim(),
           password,
           licenseKey: licenseKey.trim(),
@@ -100,7 +100,7 @@ export function LoginScreen() {
       });
       if (!result.success) {
         if (__DEV__) {
-          console.log('[AUTH][LOGIN] failed:', {
+          console.log("[AUTH][LOGIN] failed:", {
             error: result.error,
             fieldErrors: result.fieldErrors,
           });
@@ -115,7 +115,7 @@ export function LoginScreen() {
         );
         setErrors(hasFieldError ? fieldErrors : {});
         if (!hasFieldError) {
-          setFormError(result.error ?? 'Sign in failed');
+          setFormError(result.error ?? "Sign in failed");
         } else if (result.error && !fieldErrors.email) {
           // Show API message when field map is partial
           setFormError(result.error);
@@ -123,7 +123,7 @@ export function LoginScreen() {
         return;
       }
       if (__DEV__) {
-        console.log('[AUTH][LOGIN] OK → navigating home');
+        console.log("[AUTH][LOGIN] OK → navigating home");
       }
       void rememberMe;
       router.replace(APP_PATHS.home);
@@ -133,13 +133,15 @@ export function LoginScreen() {
   };
 
   return (
-    <AuthShell heading={copy.heading} subheading={copy.subheading}>
+    <AuthShell heading={copy.heading} subheading={copy.subheading} glassCard>
       {passwordResetNotice ? (
         <InlineAlert severity="success">
           Password updated. Sign in with your new password and license key.
         </InlineAlert>
       ) : null}
-      {formError ? <InlineAlert severity="error">{formError}</InlineAlert> : null}
+      {formError ? (
+        <InlineAlert severity="error">{formError}</InlineAlert>
+      ) : null}
 
       <InputField
         label="Email"
@@ -174,7 +176,11 @@ export function LoginScreen() {
       />
 
       <View style={styles.rememberRow}>
-        <Checkbox checked={rememberMe} onChange={setRememberMe} label="Remember me" />
+        <Checkbox
+          checked={rememberMe}
+          onChange={setRememberMe}
+          label="Remember me"
+        />
         <Link href={AUTH_PATHS.forgotPassword} asChild>
           <TextLink>Forgot password?</TextLink>
         </Link>
@@ -211,9 +217,9 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   rememberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
   },
   // orRow: {

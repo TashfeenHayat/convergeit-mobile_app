@@ -1,17 +1,21 @@
-import { useState } from 'react';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useState } from "react";
 import {
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-  type TextInputProps,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+    Pressable,
+    StyleSheet,
+    TextInput,
+    View,
+    type StyleProp,
+    type TextInputProps,
+    type ViewStyle,
+} from "react-native";
 
-import { Typography } from '@/components/ui/Typography';
-import { tokens } from '@/theme/tokens';
+import {
+  authOnGlassText,
+  useAuthOnGlass,
+} from "@/components/auth/AuthOnGlassContext";
+import { Typography } from "@/components/ui/Typography";
+import { tokens } from "@/theme/tokens";
 
 export type InputFieldProps = TextInputProps & {
   label?: string;
@@ -29,6 +33,7 @@ export function InputField({
   style,
   ...rest
 }: InputFieldProps) {
+  const onGlass = useAuthOnGlass();
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = Boolean(secureTextEntry);
@@ -36,22 +41,37 @@ export function InputField({
     ? tokens.colors.danger
     : focused
       ? tokens.colors.accentBlue
-      : tokens.colors.inputBorder;
+      : onGlass
+        ? authOnGlassText.border
+        : tokens.colors.inputBorder;
+  const labelColor = error
+    ? tokens.colors.danger
+    : onGlass
+      ? authOnGlassText.primary
+      : tokens.colors.textPrimary;
+  const inputColor = onGlass ? authOnGlassText.primary : tokens.colors.textPrimary;
+  const placeholderColor = onGlass
+    ? authOnGlassText.placeholder
+    : tokens.colors.textPlaceholder;
+  const iconColor = onGlass
+    ? authOnGlassText.secondary
+    : tokens.colors.textSecondary;
+  const helperColor = error
+    ? tokens.colors.danger
+    : onGlass
+      ? authOnGlassText.secondary
+      : tokens.colors.textMuted;
 
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? (
-        <Typography
-          variant="label"
-          color={error ? tokens.colors.danger : tokens.colors.textPrimary}
-          style={styles.label}
-        >
+        <Typography variant="label" color={labelColor} style={styles.label}>
           {label}
         </Typography>
       ) : null}
       <View style={[styles.field, { borderBottomColor: borderColor }]}>
         <TextInput
-          placeholderTextColor={tokens.colors.textPlaceholder}
+          placeholderTextColor={placeholderColor}
           secureTextEntry={isPassword && !showPassword}
           onFocus={(e) => {
             setFocused(true);
@@ -61,31 +81,29 @@ export function InputField({
             setFocused(false);
             rest.onBlur?.(e);
           }}
-          style={[styles.input, style]}
+          style={[styles.input, { color: inputColor }, style]}
           {...rest}
         />
         {isPassword ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            accessibilityLabel={
+              showPassword ? "Hide password" : "Show password"
+            }
             hitSlop={8}
             onPress={() => setShowPassword((v) => !v)}
             style={styles.eye}
           >
             <FontAwesome
-              name={showPassword ? 'eye-slash' : 'eye'}
+              name={showPassword ? "eye-slash" : "eye"}
               size={18}
-              color={tokens.colors.textSecondary}
+              color={iconColor}
             />
           </Pressable>
         ) : null}
       </View>
       {helperText ? (
-        <Typography
-          variant="small"
-          color={error ? tokens.colors.danger : tokens.colors.textMuted}
-          style={styles.helper}
-        >
+        <Typography variant="small" color={helperColor} style={styles.helper}>
           {helperText}
         </Typography>
       ) : null}
@@ -95,20 +113,19 @@ export function InputField({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
   },
   label: {
     marginBottom: 6,
   },
   field: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 2,
     minHeight: 44,
   },
   input: {
     flex: 1,
-    color: tokens.colors.textPrimary,
     fontSize: 16,
     paddingVertical: 10,
     paddingHorizontal: 0,
