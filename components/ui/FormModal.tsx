@@ -67,7 +67,7 @@ export function FormModal({
           </Pressable>
         </View>
 
-        <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+        <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
 
@@ -93,19 +93,22 @@ export function FormModal({
 
 const styles = StyleSheet.create({
   shell: {
-    maxWidth: 480,
-    maxHeight: '90%',
+    maxWidth: 520,
+    width: '100%',
+    maxHeight: '92%',
   },
   card: {
     padding: tokens.space.lg,
     maxHeight: '100%',
+    flexShrink: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: tokens.space.lg,
+    marginBottom: tokens.space.md,
     gap: tokens.space.sm,
+    flexShrink: 0,
   },
   headerText: {
     flex: 1,
@@ -120,15 +123,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: {
-    flexGrow: 0,
-    marginBottom: tokens.space.lg,
+    flexGrow: 1,
+    flexShrink: 1,
+    marginBottom: tokens.space.md,
   },
   bodyContent: {
-    gap: tokens.space.lg,
+    gap: tokens.space.md,
+    paddingBottom: tokens.space.sm,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: tokens.space.sm,
+    flexShrink: 0,
   },
 });

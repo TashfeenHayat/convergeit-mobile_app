@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
+
 import {
   getWidgetPreviewShareLink,
   type WidgetPreviewShareLink,
-} from "@/api/widgets/widgets.api";
-import { buildWidgetPublicTestPageUrl } from "@/lib/chat-widget/widget-sandbox-url";
-import { resolveWidgetEmbedAppOrigin } from "@/lib/chat-widget/widget-embed-api-origin";
+} from '@/api/widgets/widgets.api';
+import { resolveWidgetEmbedAppOrigin } from '@/lib/chat-widget/widget-embed-api-origin';
+import { buildWidgetPublicTestPageUrl } from '@/lib/chat-widget/widget-sandbox-url';
 
+/**
+ * GET /widgets/:key/preview-share-link — loads on mount (web detail sandbox parity).
+ */
 export function useWidgetPreviewShareLink(widgetKey: string) {
   const key = widgetKey.trim();
   const [data, setData] = useState<WidgetPreviewShareLink | null>(null);
@@ -13,7 +17,7 @@ export function useWidgetPreviewShareLink(widgetKey: string) {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!key.startsWith("wgt_")) return null;
+    if (!key.startsWith('wgt_')) return null;
     setLoading(true);
     setError(null);
     try {
@@ -21,7 +25,8 @@ export function useWidgetPreviewShareLink(widgetKey: string) {
       setData(link);
       return link;
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Could not load test link";
+      const message =
+        e instanceof Error ? e.message : 'Could not load test link';
       setError(message);
       return null;
     } finally {
@@ -39,19 +44,16 @@ export function useWidgetPreviewShareLink(widgetKey: string) {
       ? buildWidgetPublicTestPageUrl({
           widgetKey: key,
           previewShareToken: data.previewShareToken,
-          appOrigin: resolveWidgetEmbedAppOrigin({
-            browserOrigin:
-              typeof window !== "undefined" ? window.location.origin : undefined,
-          }),
+          appOrigin: resolveWidgetEmbedAppOrigin(),
         })
-      : "");
+      : '');
 
   return {
     data,
     loading,
     error,
     publicTestUrl,
-    previewShareToken: data?.previewShareToken ?? "",
+    previewShareToken: data?.previewShareToken ?? '',
     refresh: load,
   };
 }

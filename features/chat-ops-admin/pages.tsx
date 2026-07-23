@@ -32,7 +32,7 @@ export function ChatTranscriptsListPage() {
       columnIds={['name', 'status', 'websiteName', 'closedAt']}
       emptyTitle="No transcripts"
       emptyDescription="Closed chats will appear here."
-    />
+ />
   );
 }
 
@@ -58,7 +58,7 @@ export function CannedMessagesListPage() {
         const { data } = await apiClient.post('/chat/canned-responses', body);
         return data;
       }}
-    />
+ />
   );
 }
 
@@ -74,7 +74,7 @@ export function ChatSettingsListPage() {
         return data;
       }}
       columnIds={['name', 'websiteId', 'status']}
-    />
+ />
   );
 }
 
@@ -99,7 +99,7 @@ export function QaRosterListPage() {
       columnIds={['websiteId', 'userId', 'channelScope']}
       emptyTitle="No QA roster entries"
       emptyDescription="Assign QA reviewers from chat settings or the web dashboard."
-    />
+ />
   );
 }
 
@@ -125,7 +125,7 @@ export function QaTeamQualityPage() {
         <PermissionDeniedPanel
           title="Team QA reports not available"
           description="Requires chat report access from /auth/me."
-        />
+ />
       </View>
     );
   }
@@ -134,13 +134,13 @@ export function QaTeamQualityPage() {
   const summary = qaQuality?.summary;
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="Team QA reports"
           subtitle="QA performance by agent for your monitored chat scope."
           navPreset="triage"
-        />
+ />
         <View style={qaTeamQualityStyles.toolbar}>
           <Button variant="secondary" size="compact" onPress={() => void reports.refresh()}>
             Refresh
@@ -167,7 +167,7 @@ export function QaTeamQualityPage() {
                   avgQaScore: row.avgScore,
                 }))}
                 emptyLabel="No agent QA data in this range."
-              />
+ />
             </View>
           </>
         ) : (
@@ -196,7 +196,7 @@ export function ChatInvolvementListPage() {
         return data;
       }}
       columnIds={['name', 'email', 'role']}
-    />
+ />
   );
 }
 
@@ -212,7 +212,7 @@ export function ChatInternalSupervisorsListPage() {
         return data;
       }}
       columnIds={['name', 'email']}
-    />
+ />
   );
 }
 
@@ -228,7 +228,7 @@ export function ChatReportsPage() {
         return data;
       }}
       columnIds={['name', 'metric', 'value', 'period']}
-    />
+ />
   );
 }
 
@@ -250,6 +250,6 @@ export function ChatWidgetListPage() {
         const { data } = await apiClient.post('/widgets', body);
         return data;
       }}
-    />
+ />
   );
 }

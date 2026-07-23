@@ -1,10 +1,5 @@
-import { ModulePlaceholderScreen } from '@/features/dashboard';
+import { ChatWidgetNotificationsPage } from '@/features/chat-widget/pages/ChatWidgetNotificationsPage';
 
 export default function Screen() {
-  return (
-    <ModulePlaceholderScreen
-      title="Notifications"
-      webPath="/dashboard/chat-widget/add/chat/notifications"
-    />
-  );
+  return <ChatWidgetNotificationsPage />;
 }

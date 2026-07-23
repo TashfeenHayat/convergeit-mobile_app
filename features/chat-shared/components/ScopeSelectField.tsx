@@ -98,7 +98,7 @@ export function ScopeSelectField({
                 No options.
               </Typography>
             }
-          />
+  showsVerticalScrollIndicator={false}/>
           <Pressable style={styles.closeBtn} onPress={() => setOpen(false)}>
             <Typography variant="button" color={tokens.colors.textPrimary} style={{ textAlign: "center" }}>
               Close
@@ -126,7 +126,7 @@ function SearchInput({
       placeholder={placeholder}
       placeholderTextColor={tokens.colors.textPlaceholder}
       style={styles.searchInput}
-    />
+ />
   );
 }
 

@@ -208,7 +208,7 @@ export function NotificationsBellDrawer() {
             style={styles.backdrop}
             onPress={handleClose}
             accessibilityLabel="Dismiss notifications"
-          />
+ />
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <View style={styles.sheetHeader}>
@@ -270,7 +270,7 @@ export function NotificationsBellDrawer() {
               })}
             </View>
 
-            <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+            <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
               {loading ? (
                 <View style={styles.centerState}>
                   <ActivityIndicator color={tokens.colors.accentBlue} />
@@ -282,7 +282,7 @@ export function NotificationsBellDrawer() {
                       name={filter === "all" ? "check" : "bell-o"}
                       size={24}
                       color={tokens.colors.accentBlue}
-                    />
+ />
                   </View>
                   <Typography variant="medium" style={styles.emptyTitle}>
                     {emptyTitle}

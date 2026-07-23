@@ -219,7 +219,7 @@ export function PhoneInputField({
           }
           placeholderTextColor={tokens.colors.textPlaceholder}
           style={styles.input}
-        />
+ />
       </View>
 
       {helper ? (
@@ -253,7 +253,7 @@ export function PhoneInputField({
             <View style={styles.handleRow}>
               <View
                 style={[styles.handle, { backgroundColor: theme.app.dashboard.cardBorder }]}
-              />
+ />
             </View>
 
             <View style={styles.sheetHeader}>
@@ -309,7 +309,7 @@ export function PhoneInputField({
                 style={styles.searchInput}
                 autoCapitalize="none"
                 autoCorrect={false}
-              />
+ />
               {query ? (
                 <Pressable onPress={() => setQuery('')} hitSlop={8}>
                   <Ionicons name="close-circle" size={16} color={theme.app.text.muted} />
@@ -389,7 +389,7 @@ export function PhoneInputField({
                   No countries match your search.
                 </Typography>
               }
-            />
+  showsVerticalScrollIndicator={false}/>
           </View>
         </View>
       </Modal>

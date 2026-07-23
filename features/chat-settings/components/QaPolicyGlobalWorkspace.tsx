@@ -33,7 +33,7 @@ export function QaPolicyGlobalWorkspace() {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader title="QA Policy" subtitle="Global QA policy scoped by organization." navPreset="configure" />
         <AppCard style={styles.card}>
@@ -48,7 +48,7 @@ export function QaPolicyGlobalWorkspace() {
             parentCompanyOptions={scopeFilters.parentCompanyOptions}
             childCompanyOptions={scopeFilters.childCompanyOptions}
             websiteOptions={scopeFilters.websiteOptions}
-          />
+ />
           <Typography variant="small" muted>
             QA policy editing uses the same API as web. Open the web dashboard for full SLA and checklist configuration; mobile shows scope selection here.
           </Typography>

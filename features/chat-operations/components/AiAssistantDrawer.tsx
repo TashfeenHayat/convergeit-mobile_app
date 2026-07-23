@@ -83,7 +83,7 @@ export function AiAssistantDrawer({
         </Typography>
       ) : null}
 
-      <ScrollView ref={scrollRef} style={styles.thread} contentContainerStyle={styles.threadContent}>
+      <ScrollView ref={scrollRef} style={styles.thread} contentContainerStyle={styles.threadContent} showsVerticalScrollIndicator={false}>
         {messages.length === 0 ? (
           <View style={{ paddingVertical: tokens.space.sm }}>
             <Typography variant="small" muted style={{ textAlign: "center", marginBottom: tokens.space.sm, lineHeight: 18 }}>

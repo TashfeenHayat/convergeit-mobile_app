@@ -1,4 +1,4 @@
-import { extractUsersRows, parseUserListType } from "@/app/dashboard/user-page/utils";
+import { extractUsersRows, parseUserListType } from "@/lib/users/user-list-rows";
 import { unwrapApiData } from "@/lib/utils/core";
 
 export type RosterUserOption = {

@@ -85,7 +85,7 @@ export function CompanySetupDraftsModal({
                 name="document-text-outline"
                 size={24}
                 color={theme.app.dashboard.accentBlue}
-              />
+ />
             </View>
             <Typography variant="medium" style={{ fontWeight: '700' }}>
               No drafts yet
@@ -95,7 +95,7 @@ export function CompanySetupDraftsModal({
             </Typography>
           </View>
         ) : (
-          <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={{ gap: 8 }}>
               {rows.map((row) => (
                 <Pressable
@@ -126,7 +126,7 @@ export function CompanySetupDraftsModal({
                       name="document-outline"
                       size={18}
                       color={theme.app.dashboard.accentBlue}
-                    />
+ />
                   </View>
                   <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                     <Typography variant="medium" style={{ fontWeight: '700' }} numberOfLines={1}>

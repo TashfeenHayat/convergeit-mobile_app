@@ -94,7 +94,7 @@ function AccordionSection({
           size={16}
           color={tokens.colors.textMuted}
           style={{ transform: [{ rotate: open ? "180deg" : "0deg" }] }}
-        />
+ />
       </Pressable>
       {open ? <View style={styles.sectionBody}>{children}</View> : null}
     </View>
@@ -191,7 +191,7 @@ export function VisitorInfoPanel({
         </Typography>
       </PanelHeader>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: tokens.space.lg }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: tokens.space.lg }} showsVerticalScrollIndicator={false}>
         <ProfileHeroCard style={{ alignItems: "center", gap: 6 }}>
           <QueueAvatar style={{ width: 56, height: 56 }}>
             <Typography variant="mediumLarge" style={{ fontWeight: "700" }}>
@@ -337,7 +337,7 @@ export function VisitorInfoPanel({
               currentUserId={currentUserId}
               hasOperational={hasOperational}
               supervisor={supervisor}
-            />
+ />
           </View>
         ) : null}
 
@@ -348,7 +348,7 @@ export function VisitorInfoPanel({
               placeholder="For AI when websiteId is missing"
               value={fallbackWebsiteId}
               onChangeText={onFallbackWebsiteIdChange}
-            />
+ />
           </View>
         ) : null}
 

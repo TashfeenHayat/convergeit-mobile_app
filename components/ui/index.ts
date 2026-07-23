@@ -52,6 +52,9 @@ export type { HeroMetricCardProps } from './HeroMetricCard';
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
 
+export { FiltersSearchBar } from './FiltersSearchBar';
+export type { FiltersSearchBarProps } from './FiltersSearchBar';
+
 export { FilterableSearchBar } from './SearchBar/FilterableSearchBar';
 export type {
   FilterableSearchBarProps,
@@ -97,11 +100,26 @@ export type {
 export { ListTableCard } from './ListTableCard';
 export type { ListTableCardProps } from './ListTableCard';
 
+export { DataCardGrid, EntityListCard } from './DataCardGrid';
+export type {
+  DataCardGridProps,
+  DataCardGridEmptyState,
+  EntityListCardProps,
+  EntityListCardBadgeTone,
+  EntityListCardDetail,
+} from './DataCardGrid';
+
 export { StatusChip, statusToneFromLabel } from './StatusChip';
 export type { StatusChipProps, StatusChipTone } from './StatusChip';
 
 export { FilterButton } from './FilterButton';
 export type { FilterButtonProps } from './FilterButton';
+
+export { Calendar } from './Calendar';
+export type { CalendarProps } from './Calendar';
+
+export { TimeField } from './TimeField';
+export type { TimeFieldProps } from './TimeField';
 
 export { StatusRadioGroup } from './StatusRadioGroup';
 export type { StatusRadioGroupProps } from './StatusRadioGroup';
@@ -130,3 +148,5 @@ export type { IconSlotProps } from './IconSlot';
 
 export { AppIconButton } from './AppIconButton';
 export type { AppIconButtonProps, ToolbarIconButtonTone } from './AppIconButton';
+
+export { AppScrollView, AppFlatList, AppSectionList } from './AppScroll';

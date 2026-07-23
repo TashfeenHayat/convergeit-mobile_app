@@ -33,6 +33,7 @@ export {
   useAssignDepartmentHeadMutation,
   useDepartmentHeadsAttendanceQuery,
   useDepartmentHeadsListQuery,
+  useDepartmentHeadsReviewerAttendanceQuery,
   useRemoveDepartmentHeadMutation,
 } from "./department-heads";
 export type { HrmsDepartmentHeadsAttendanceParams, HrmsDepartmentHeadsListParams } from "./department-heads";

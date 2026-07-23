@@ -14,3 +14,5 @@ export {
   useTheme,
 } from '@/theme';
 export type { AppTheme, AppColors, Tokens } from '@/theme';
+export { useThemeColors, hexAlpha, dialogBackdropColor } from './use-theme-colors';
+export { resolveRnCardFill, extractCssColor } from './rn-surface';

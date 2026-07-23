@@ -137,7 +137,7 @@ export function ResellerOwnMailPage() {
                 refreshing={listQuery.isRefetching && !listQuery.isLoading}
                 onRefresh={() => void listQuery.refetch()}
                 tintColor={theme.app.dashboard.accentBlue}
-              />
+          />
             }
             contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: 24 }}
             ListEmptyComponent={
@@ -156,7 +156,7 @@ export function ResellerOwnMailPage() {
                   <StatusChip
                     label={item.isEnabled ? "Enabled" : "Disabled"}
                     tone={item.isEnabled ? "success" : "neutral"}
-                  />
+ />
                 </View>
                 <Typography variant="small" muted>
                   {providerLabel(item)} · {item.fromEmail || "No from email"}
@@ -188,7 +188,7 @@ export function ResellerOwnMailPage() {
                 </View>
               </AppCard>
             )}
-          />
+  showsVerticalScrollIndicator={false}/>
         )
       ) : null}
 
@@ -204,7 +204,7 @@ export function ResellerOwnMailPage() {
           setEditResellerLabel("");
         }}
         onSaved={() => void listQuery.refetch()}
-      />
+ />
 
       <ConfirmActionModal
         open={Boolean(deleteTarget)}
@@ -219,7 +219,7 @@ export function ResellerOwnMailPage() {
         isLoading={deleteMutation.isPending}
         onDismiss={() => setDeleteTarget(null)}
         onConfirm={() => void handleConfirmDelete()}
-      />
+ />
     </MobileScreen>
   );
 }

@@ -99,6 +99,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   toolbar: {
+    width: '100%',
+    alignSelf: 'stretch',
     gap: tokens.space.sm,
   },
   body: {

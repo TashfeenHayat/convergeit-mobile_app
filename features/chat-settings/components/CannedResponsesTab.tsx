@@ -75,7 +75,7 @@ export function CannedResponsesTab({
               </Typography>
             </Pressable>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <CannedMessagesModal
@@ -89,7 +89,7 @@ export function CannedResponsesTab({
           onNotifySuccess("Canned messages saved.");
         }}
         onError={onNotifyError}
-      />
+ />
 
       {modalOpen && !editWebsiteId && canEdit ? (
         <View style={{ marginTop: tokens.space.md }}>
@@ -98,7 +98,7 @@ export function CannedResponsesTab({
             value={editWebsiteId}
             onChange={setEditWebsiteId}
             options={[{ value: "", label: "Select website…" }, ...websiteOptions.filter((w) => w.value)]}
-          />
+ />
         </View>
       ) : null}
     </View>

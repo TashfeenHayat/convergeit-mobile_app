@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -15,6 +14,8 @@ import { DashboardPageIntro } from '@/components/layout/DashboardPageIntro';
 import {
   AppCard,
   Button,
+  DataCardGrid,
+  EntityListCard,
   FormModal,
   ListTableCard,
   MetricCard,
@@ -27,6 +28,7 @@ import { extractApiErrorMessage } from '@/lib/api/errors';
 import { useUsersListQuery } from '@/lib/hooks/query/users';
 import { glassUi } from '@/lib/theme/glass-ui';
 import { extractUsersRows } from '@/lib/users/user-list-rows';
+import { pickApiTotal } from '@/lib/utils/admin-list';
 import { useAppTheme } from '@/theme';
 
 const PAGE_SIZE = 20;
@@ -39,6 +41,18 @@ type PermUserRow = {
   parentCompany: string;
 };
 
+function toPermRows(data: unknown): PermUserRow[] {
+  return extractUsersRows(data)
+    .filter((u) => u.id.trim().length > 0)
+    .map((u) => ({
+      id: u.id,
+      name: u.user || '—',
+      email: u.email || '—',
+      reseller: u.reseller || '—',
+      parentCompany: u.parentCompany || '—',
+    }));
+}
+
 export function UserPermissionsPage() {
   const theme = useAppTheme();
   const router = useRouter();
@@ -47,49 +61,27 @@ export function UserPermissionsPage() {
   const [pickOpen, setPickOpen] = useState(false);
   const [pickUserId, setPickUserId] = useState('');
 
-  const query = useUsersListQuery({ all: true });
+  const query = useUsersListQuery({
+    page,
+    limit: PAGE_SIZE,
+    search: search.trim() || undefined,
+  });
+  const pickQuery = useUsersListQuery({ all: true }, { enabled: pickOpen });
 
-  const allRows = useMemo<PermUserRow[]>(() => {
-    return extractUsersRows(query.data)
-      .filter((u) => u.id.trim().length > 0)
-      .map((u) => ({
-        id: u.id,
-        name: u.user || '—',
-        email: u.email || '—',
-        reseller: u.reseller || '—',
-        parentCompany: u.parentCompany || '—',
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-  }, [query.data]);
+  const rows = useMemo(() => toPermRows(query.data), [query.data]);
+  const total = pickApiTotal(query.data, rows.length);
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
 
   const userOptions = useMemo(
     () =>
-      allRows.map((u) => ({
+      toPermRows(pickQuery.data).map((u) => ({
         value: u.id,
         label: `${u.name} — ${u.email}`,
       })),
-    [allRows],
+    [pickQuery.data],
   );
-
-  const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return allRows;
-    const includes = (v: string) => v.toLowerCase().includes(q);
-    return allRows.filter(
-      (u) =>
-        includes(u.name) ||
-        (u.email !== '—' && includes(u.email)) ||
-        (u.reseller !== '—' && includes(u.reseller)) ||
-        (u.parentCompany !== '—' && includes(u.parentCompany)),
-    );
-  }, [allRows, search]);
-
-  const pageCount = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, pageCount);
-  const rows = useMemo(() => {
-    const start = (clampedPage - 1) * PAGE_SIZE;
-    return filteredRows.slice(start, start + PAGE_SIZE);
-  }, [clampedPage, filteredRows]);
 
   const openUserPermissions = (id: string) => {
     router.push(`/user-page/permissions/${encodeURIComponent(id)}` as Href);
@@ -102,6 +94,8 @@ export function UserPermissionsPage() {
       <ScrollView
         contentContainerStyle={[styles.scroll, { gap: theme.spacing.md }]}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={query.isRefetching && !query.isLoading}
@@ -118,7 +112,7 @@ export function UserPermissionsPage() {
               setPage(1);
             }}
             placeholder="Search by name or email…"
-          />
+ />
 
           <Pressable
             onPress={() => {
@@ -175,24 +169,24 @@ export function UserPermissionsPage() {
           <View style={styles.statCell}>
             <MetricCard
               title="Users"
-              value={String(allRows.length)}
+              value={String(total)}
               subtitle="Directory"
               showTrendArrow={false}
               valueColor={accent}
               iconBgColor={`${accent}28`}
               icon={<Ionicons name="people-outline" size={20} color={accent} />}
-            />
+ />
           </View>
           <View style={styles.statCell}>
             <MetricCard
               title="Filtered"
-              value={String(filteredRows.length)}
+              value={String(total)}
               subtitle={search.trim() ? 'Matching' : 'Showing all'}
               showTrendArrow={false}
               valueColor={accent}
               iconBgColor={`${accent}28`}
               icon={<Ionicons name="funnel-outline" size={20} color={accent} />}
-            />
+ />
           </View>
         </View>
 
@@ -208,105 +202,42 @@ export function UserPermissionsPage() {
         ) : (
           <ListTableCard
             title="Users"
-            subtitle={`${filteredRows.length} result${filteredRows.length === 1 ? '' : 's'}`}
+            subtitle={`${total} result${total === 1 ? '' : 's'}`}
             icon="key-outline"
             toolbar={null}
-            footer={
-              pageCount > 1 ? (
-                <TablePagination
-                  page={clampedPage}
-                  pageCount={pageCount}
-                  onPageChange={setPage}
-                />
-              ) : undefined
-            }
           >
-            {query.isLoading && !query.data ? (
-              <View style={styles.centered}>
-                <ActivityIndicator color={accent} />
-                <Typography variant="small" muted>
-                  Loading users…
-                </Typography>
-              </View>
-            ) : rows.length === 0 ? (
-              <View style={styles.empty}>
-                <View
-                  style={[
-                    styles.emptyIcon,
-                    {
-                      backgroundColor: `${accent}22`,
-                      borderColor: glassUi.border.subtle,
-                    },
+            <DataCardGrid
+              columns={1}
+              isLoading={query.isLoading && !query.data}
+              empty={rows.length === 0}
+              emptyState={{
+                title: 'No users found',
+                description: search.trim()
+                  ? 'Try a different search.'
+                  : 'Users will appear here once available.',
+                icon: 'key-outline',
+              }}
+              showingLabel={
+                rows.length > 0 ? `Showing ${from} to ${to} of ${total} entries` : undefined
+              }
+              footerRight={
+                <TablePagination page={page} pageCount={pageCount} onPageChange={setPage} />
+              }
+            >
+              {rows.map((row) => (
+                <EntityListCard
+                  key={row.id}
+                  title={row.name}
+                  subtitle={row.email}
+                  details={[
+                    { label: 'Reseller', value: row.reseller },
+                    { label: 'Parent company', value: row.parentCompany },
                   ]}
-                >
-                  <Ionicons name="key-outline" size={28} color={accent} />
-                </View>
-                <Typography variant="medium16" style={{ fontWeight: '700' }}>
-                  No users found
-                </Typography>
-                <Typography variant="small" muted style={{ textAlign: 'center' }}>
-                  {search.trim()
-                    ? 'Try a different search.'
-                    : 'Users will appear here once available.'}
-                </Typography>
-              </View>
-            ) : (
-              <View style={{ gap: 8 }}>
-                {rows.map((row) => (
-                  <Pressable
-                    key={row.id}
-                    onPress={() => openUserPermissions(row.id)}
-                    style={({ pressed }) => [
-                      styles.rowCard,
-                      {
-                        backgroundColor: theme.app.dashboard.overlayLight,
-                        borderColor: theme.app.dashboard.cardBorder,
-                        opacity: pressed ? 0.9 : 1,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.rowIcon,
-                        {
-                          backgroundColor: `${accent}22`,
-                          borderColor: glassUi.border.subtle,
-                        },
-                      ]}
-                    >
-                      <Ionicons name="person-outline" size={18} color={accent} />
-                    </View>
-                    <View style={styles.rowBody}>
-                      <Typography variant="medium16" style={{ fontWeight: '700' }} numberOfLines={1}>
-                        {row.name}
-                      </Typography>
-                      <Typography variant="small" muted numberOfLines={1}>
-                        {row.email}
-                      </Typography>
-                      <Typography variant="small" muted numberOfLines={1}>
-                        {[
-                          row.reseller !== '—' ? row.reseller : null,
-                          row.parentCompany !== '—' ? row.parentCompany : null,
-                        ]
-                          .filter(Boolean)
-                          .join(' · ') || '—'}
-                      </Typography>
-                    </View>
-                    <View
-                      style={[
-                        styles.iconBtn,
-                        {
-                          backgroundColor: `${accent}18`,
-                          borderColor: glassUi.border.subtle,
-                        },
-                      ]}
-                    >
-                      <Ionicons name="chevron-forward" size={16} color={accent} />
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            )}
+                  onPress={() => openUserPermissions(row.id)}
+                  onEditPress={() => openUserPermissions(row.id)}
+ />
+              ))}
+            </DataCardGrid>
           </ListTableCard>
         )}
       </ScrollView>
@@ -333,14 +264,14 @@ export function UserPermissionsPage() {
           options={userOptions}
           placeholder="Search by name or email…"
           searchPlaceholder="Search users…"
-        />
+ />
       </FormModal>
     </MobileScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, paddingHorizontal: 8 },
   scroll: { paddingBottom: 28 },
   statsRow: {
     flexDirection: 'row',
@@ -387,57 +318,6 @@ const styles = StyleSheet.create({
   addCtaChevron: {
     width: 32,
     height: 32,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  centered: {
-    minHeight: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  empty: {
-    paddingVertical: 28,
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 16,
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    marginBottom: 4,
-  },
-  rowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  rowIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  rowBody: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  iconBtn: {
-    width: 34,
-    height: 34,
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',

@@ -31,7 +31,7 @@ export function ChatSettingsWebsiteWorkspace({ websiteId }: { websiteId: string 
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader title="Website chat settings" subtitle={websiteId} navPreset="configure" />
         <AppCard style={styles.card}>

@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   RefreshControl,
@@ -18,10 +17,11 @@ import {
   AppCard,
   Button,
   ConfirmActionModal,
+  DataCardGrid,
+  EntityListCard,
+  FiltersSearchBar,
   ListTableCard,
   MetricCard,
-  SearchBar,
-  StatusChip,
   TablePagination,
   Typography,
 } from '@/components/ui';
@@ -52,7 +52,20 @@ import { useAppTheme } from '@/theme';
 const PAGE_LIMIT = 50;
 
 function websiteLabel(item: WebsiteAssignmentScopeItem): string {
-  return (item.name ?? '').trim() || (item.url ?? '').trim() || item.websiteId.slice(0, 8);
+  const name = (item.name ?? '').trim();
+  const url = (item.url ?? '').trim();
+  return name || url || item.websiteId.slice(0, 8);
+}
+
+function websiteHost(item: WebsiteAssignmentScopeItem): string {
+  const url = (item.url ?? '').trim();
+  if (!url) return websiteLabel(item);
+  try {
+    const host = new URL(url.includes('://') ? url : `https://${url}`).hostname;
+    return host || url;
+  } catch {
+    return url.replace(/^https?:\/\//i, '');
+  }
 }
 
 export type WebsiteAssignmentsListPageProps = {
@@ -71,6 +84,7 @@ export function WebsiteAssignmentsListPage({
   const scope = useWebsiteAssignmentScopeFilters();
   const accent = theme.app.dashboard.accentBlue;
 
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [filterAssigned, setFilterAssigned] = useState('');
   const [filterRoster, setFilterRoster] = useState('');
@@ -86,9 +100,21 @@ export function WebsiteAssignmentsListPage({
   const childId = lockedChildCompanyId?.trim() || scope.filterChildCompanyId;
   const isSitesPage = Boolean(lockedParentCompanyId || lockedChildCompanyId);
 
+  const hasActiveFilters = Boolean(
+    scope.hasScopeFilters ||
+      filterAssigned.trim() ||
+      filterRoster.trim() ||
+      search.trim(),
+  );
+
   useEffect(() => {
     setPage(1);
   }, [scope.filterResellerId, parentId, childId, search, filterAssigned, filterRoster]);
+
+  const applySearch = () => {
+    setSearch(searchInput.trim());
+    setPage(1);
+  };
 
   const listParams = useMemo(
     () =>
@@ -174,129 +200,19 @@ export function WebsiteAssignmentsListPage({
             onRefresh={() => void listQuery.refetch()}
             tintColor={accent}
           />
-        }
-      >
+        } showsVerticalScrollIndicator={false}>
         <DashboardPageIntro
           subtitle={
             isSitesPage
               ? 'Sites under this company — open any row to manage roster and hours.'
-              : 'Organize agents by company tree. Open a site for roster, hours, and topics.'
+              : 'Manage service schedules and agent rosters per website — scoped to your reseller or client.'
           }
         >
-          <SearchBar
-            value={search}
-            onChange={(v) => {
-              setSearch(v);
-              setPage(1);
-            }}
-            placeholder="Search website, company, URL…"
-          />
-
-          <View style={styles.filterRow}>
-            <Pressable
-              onPress={() => setFiltersOpen((v) => !v)}
-              style={({ pressed }) => [
-                styles.filterToggle,
-                {
-                  borderColor: filtersOpen ? `${accent}88` : theme.app.dashboard.cardBorder,
-                  backgroundColor: filtersOpen ? `${accent}18` : theme.app.dashboard.overlayLight,
-                  opacity: pressed ? 0.88 : 1,
-                },
-              ]}
-            >
-              <Ionicons
-                name="options-outline"
-                size={16}
-                color={filtersOpen ? accent : theme.app.text.secondary}
-              />
-              <Typography
-                variant="small"
-                style={{ fontWeight: '700' }}
-                color={filtersOpen ? accent : theme.app.text.secondary}
-              >
-                Filters
-              </Typography>
-            </Pressable>
-            {ASSIGNED_FILTER_OPTIONS.filter((o) => o.value).slice(0, 2).map((opt) => {
-              const selected = filterAssigned === opt.value;
-              return (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => {
-                    setFilterAssigned(selected ? '' : opt.value);
-                    setPage(1);
-                  }}
-                  style={[
-                    styles.quickChip,
-                    {
-                      borderColor: selected ? `${accent}99` : theme.app.dashboard.cardBorder,
-                      backgroundColor: selected ? `${accent}22` : theme.app.dashboard.overlayLight,
-                    },
-                  ]}
-                >
-                  <Typography
-                    variant="small"
-                    style={{ fontWeight: selected ? '700' : '500' }}
-                    color={selected ? accent : theme.app.text.secondary}
-                  >
-                    {opt.label}
-                  </Typography>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {filtersOpen ? (
-            <View
-              style={[
-                styles.filterSheet,
-                {
-                  borderColor: theme.app.dashboard.cardBorder,
-                  backgroundColor: theme.app.dashboard.overlayLight,
-                },
-              ]}
-            >
-              {!isSitesPage ? (
-                <WebsiteAssignmentScopeFilterPanel
-                  canFilterByResellerId={scope.canFilterByResellerId}
-                  filterResellerId={scope.filterResellerId}
-                  setFilterResellerId={scope.setFilterResellerId}
-                  filterParentCompanyId={scope.filterParentCompanyId}
-                  setFilterParentCompanyId={scope.setFilterParentCompanyId}
-                  filterChildCompanyId={scope.filterChildCompanyId}
-                  setFilterChildCompanyId={scope.setFilterChildCompanyId}
-                  resellerFilterOptions={scope.resellerFilterOptions}
-                  parentCompanyFilterOptions={scope.parentCompanyFilterOptions}
-                  childCompanyFilterOptions={scope.childCompanyFilterOptions}
-                  hasScopeFilters={scope.hasScopeFilters}
-                  onClearAll={scope.clearScopeFilters}
-                  onClose={() => setFiltersOpen(false)}
-                />
-              ) : null}
-              <FilterChips
-                label="Agents"
-                options={ASSIGNED_FILTER_OPTIONS}
-                value={filterAssigned}
-                onChange={(v) => {
-                  setFilterAssigned(v);
-                  setPage(1);
-                }}
-              />
-              <FilterChips
-                label="Roster state"
-                options={ROSTER_FILTER_OPTIONS}
-                value={filterRoster}
-                onChange={(v) => {
-                  setFilterRoster(v);
-                  setPage(1);
-                }}
-              />
-            </View>
-          ) : null}
-
           {gates.assign ? (
             <Pressable
               onPress={() => router.push('/website-assigning/assign' as Href)}
+              accessibilityRole="button"
+              accessibilityLabel="Assign Website"
               style={({ pressed }) => [
                 styles.addCta,
                 {
@@ -318,7 +234,7 @@ export function WebsiteAssignmentsListPage({
               </View>
               <View style={styles.addCtaCopy}>
                 <Typography variant="medium16" style={{ fontWeight: '700' }}>
-                  Assign website
+                  Assign Website
                 </Typography>
                 <Typography variant="small" muted numberOfLines={2}>
                   Pick a site and open its roster workspace
@@ -327,13 +243,82 @@ export function WebsiteAssignmentsListPage({
               <View
                 style={[
                   styles.addCtaChevron,
-                  { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
+                  {
+                    backgroundColor: `${accent}22`,
+                    borderColor: glassUi.border.subtle,
+                  },
                 ]}
               >
                 <Ionicons name="arrow-forward" size={16} color={accent} />
               </View>
             </Pressable>
           ) : null}
+
+          <FiltersSearchBar
+            value={searchInput}
+            onChange={setSearchInput}
+            onSearch={applySearch}
+            placeholder="Search URL, website, company, reseller, or assigned user…"
+            filtersOpen={filtersOpen}
+            onFilterPress={() => setFiltersOpen((v) => !v)}
+            hasActiveFilters={hasActiveFilters}
+          >
+            {filtersOpen ? (
+              <>
+                {!isSitesPage ? (
+                  <WebsiteAssignmentScopeFilterPanel
+                    canFilterByResellerId={scope.canFilterByResellerId}
+                    filterResellerId={scope.filterResellerId}
+                    setFilterResellerId={scope.setFilterResellerId}
+                    filterParentCompanyId={scope.filterParentCompanyId}
+                    setFilterParentCompanyId={scope.setFilterParentCompanyId}
+                    filterChildCompanyId={scope.filterChildCompanyId}
+                    setFilterChildCompanyId={scope.setFilterChildCompanyId}
+                    resellerFilterOptions={scope.resellerFilterOptions}
+                    parentCompanyFilterOptions={scope.parentCompanyFilterOptions}
+                    childCompanyFilterOptions={scope.childCompanyFilterOptions}
+                    hasScopeFilters={scope.hasScopeFilters}
+                    onClearAll={scope.clearScopeFilters}
+                    onClose={() => setFiltersOpen(false)}
+ />
+                ) : null}
+                <FilterChips
+                  label="Agents"
+                  options={ASSIGNED_FILTER_OPTIONS}
+                  value={filterAssigned}
+                  onChange={(v) => {
+                    setFilterAssigned(v);
+                    setPage(1);
+                  }}
+ />
+                <FilterChips
+                  label="Roster state"
+                  options={ROSTER_FILTER_OPTIONS}
+                  value={filterRoster}
+                  onChange={(v) => {
+                    setFilterRoster(v);
+                    setPage(1);
+                  }}
+ />
+                {(search.trim() || filterAssigned || filterRoster || scope.hasScopeFilters) && (
+                  <Button
+                    size="compact"
+                    variant="outlined"
+                    onPress={() => {
+                      setSearchInput('');
+                      setSearch('');
+                      setFilterAssigned('');
+                      setFilterRoster('');
+                      scope.clearScopeFilters();
+                      setPage(1);
+                    }}
+                  >
+                    Clear all filters
+                  </Button>
+                )}
+              </>
+            ) : null}
+          </FiltersSearchBar>
         </DashboardPageIntro>
 
         <View style={styles.statsRow}>
@@ -346,7 +331,7 @@ export function WebsiteAssignmentsListPage({
               valueColor={accent}
               iconBgColor={`${accent}28`}
               icon={<Ionicons name="globe-outline" size={20} color={accent} />}
-            />
+ />
           </View>
           <View style={styles.statCell}>
             <MetricCard
@@ -357,7 +342,7 @@ export function WebsiteAssignmentsListPage({
               valueColor={accent}
               iconBgColor={`${accent}28`}
               icon={<Ionicons name="time-outline" size={20} color={accent} />}
-            />
+ />
           </View>
           <View style={styles.statCell}>
             <MetricCard
@@ -368,7 +353,7 @@ export function WebsiteAssignmentsListPage({
               valueColor={accent}
               iconBgColor={`${accent}28`}
               icon={<Ionicons name="people-outline" size={20} color={accent} />}
-            />
+ />
           </View>
         </View>
 
@@ -383,135 +368,171 @@ export function WebsiteAssignmentsListPage({
           </AppCard>
         ) : (
           <ListTableCard
-            title="Directory"
-            subtitle={`${total} site${total === 1 ? '' : 's'}`}
+            title={`Websites (${total})`}
+            subtitle="Grouped by parent company"
             icon="globe-outline"
-            footer={
-              totalPages > 1 ? (
-                <TablePagination page={page} pageCount={totalPages} onPageChange={setPage} />
-              ) : undefined
-            }
+            toolbar={null}
           >
-            {listQuery.isLoading && !listQuery.data ? (
-              <View style={styles.centered}>
-                <ActivityIndicator color={accent} />
-                <Typography variant="small" muted>
-                  Loading websites…
-                </Typography>
-              </View>
-            ) : items.length === 0 ? (
-              <View style={styles.empty}>
+            <DataCardGrid
+              columns={1}
+              isLoading={listQuery.isLoading && !listQuery.data}
+              empty={!listQuery.isLoading && items.length === 0}
+              emptyState={{
+                title: 'No websites found',
+                description: 'Try clearing filters or searching a different company.',
+                icon: 'globe-outline',
+              }}
+              showingLabel={
+                items.length > 0
+                  ? `Showing ${Math.min((page - 1) * PAGE_LIMIT + 1, total)}-${Math.min(page * PAGE_LIMIT, total)} of ${total} • page ${page} of ${totalPages}`
+                  : undefined
+              }
+              footerRight={
+                totalPages > 0 ? (
+                  <TablePagination page={page} pageCount={totalPages} onPageChange={setPage} />
+                ) : undefined
+              }
+            >
+              {hierarchy.map((parent) => (
                 <View
+                  key={parent.parentCompanyId || parent.parentCompanyName}
                   style={[
-                    styles.emptyIcon,
-                    { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
+                    styles.parentCard,
+                    {
+                      borderColor: theme.app.dashboard.cardBorder,
+                      backgroundColor: theme.app.dashboard.overlayLight,
+                    },
                   ]}
                 >
-                  <Ionicons name="globe-outline" size={28} color={accent} />
-                </View>
-                <Typography variant="medium16" style={{ fontWeight: '700' }}>
-                  No websites found
-                </Typography>
-                <Typography variant="small" muted style={{ textAlign: 'center' }}>
-                  Try clearing filters or searching a different company.
-                </Typography>
-              </View>
-            ) : (
-              <View style={{ gap: 14 }}>
-                {hierarchy.map((parent) => (
-                  <View
-                    key={parent.parentCompanyId || parent.parentCompanyName}
-                    style={[
-                      styles.parentCard,
-                      {
-                        borderColor: theme.app.dashboard.cardBorder,
-                        backgroundColor: theme.app.dashboard.overlayLight,
-                      },
-                    ]}
-                  >
-                    <View style={styles.parentHeader}>
-                      <View
-                        style={[
-                          styles.parentIcon,
-                          { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
-                        ]}
-                      >
-                        <Ionicons name="business-outline" size={18} color={accent} />
-                      </View>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="medium16" style={{ fontWeight: '800' }} numberOfLines={1}>
-                          {parent.parentCompanyName}
-                        </Typography>
-                        <Typography variant="small" muted numberOfLines={1}>
-                          {parent.resellerName}
-                        </Typography>
-                      </View>
+                  <View style={styles.parentHeader}>
+                    <View
+                      style={[
+                        styles.parentIcon,
+                        { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
+                      ]}
+                    >
+                      <Ionicons name="business-outline" size={18} color={accent} />
                     </View>
+                    <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                      <Typography variant="medium16" style={{ fontWeight: '800' }} numberOfLines={1}>
+                        Parent company: {parent.parentCompanyName}
+                      </Typography>
+                      <Typography variant="small" muted numberOfLines={1}>
+                        Client (reseller): {parent.resellerName}
+                      </Typography>
+                    </View>
+                  </View>
 
-                    <View style={{ gap: 10 }}>
-                      {parent.children.map((child) => (
-                        <View key={child.childCompanyId || child.childCompanyName} style={{ gap: 8 }}>
-                          <Pressable
-                            onPress={() => {
-                              if (!parent.parentCompanyId || !child.childCompanyId) return;
-                              router.push(
-                                sitesListHref(parent.parentCompanyId, child.childCompanyId) as Href,
-                              );
-                            }}
-                            style={styles.childHeader}
+                  <View style={{ gap: 12 }}>
+                    {parent.children.map((child) => (
+                      <View key={child.childCompanyId || child.childCompanyName} style={{ gap: 10 }}>
+                        <View style={styles.childHeader}>
+                          <View
+                            style={[
+                              styles.childPill,
+                              {
+                                backgroundColor: `${accent}18`,
+                                borderColor: glassUi.border.subtle,
+                              },
+                            ]}
                           >
-                            <Typography
-                              variant="small"
-                              style={{ fontWeight: '700', flex: 1, letterSpacing: 0.2 }}
-                              numberOfLines={1}
-                            >
+                            <Typography variant="small" style={{ fontWeight: '700' }} numberOfLines={1}>
                               {child.childCompanyName}
                             </Typography>
-                            <View
-                              style={[
-                                styles.countPill,
+                            <Typography variant="small" muted>
+                              ({child.websites.length} website
+                              {child.websites.length === 1 ? '' : 's'})
+                            </Typography>
+                          </View>
+                          {parent.parentCompanyId && child.childCompanyId ? (
+                            <Pressable
+                              onPress={() =>
+                                router.push(
+                                  sitesListHref(
+                                    parent.parentCompanyId,
+                                    child.childCompanyId,
+                                  ) as Href,
+                                )
+                              }
+                              hitSlop={6}
+                            >
+                              <Typography
+                                variant="small"
+                                style={{ fontWeight: '700', color: accent }}
+                              >
+                                All websites (detail)
+                              </Typography>
+                            </Pressable>
+                          ) : null}
+                        </View>
+
+                        {child.websites.map((item) => {
+                          const filled = item.filledSlots ?? item.assignedCount ?? 0;
+                          const expected = item.expectedRosterSlots ?? 0;
+                          const members = item.uniqueMemberCount ?? filled;
+                          const hoursReady = Boolean(
+                            item.serviceSchedulingConfigured || item.serviceHoursConfigured,
+                          );
+                          return (
+                            <EntityListCard
+                              key={item.websiteId}
+                              title={websiteHost(item)}
+                              subtitle={item.url?.trim() || undefined}
+                              details={[
                                 {
-                                  backgroundColor: `${accent}18`,
-                                  borderColor: glassUi.border.subtle,
+                                  label: 'Status',
+                                  value: hoursReady ? 'Schedule ready' : 'Please add schedule',
+                                },
+                                {
+                                  label: 'Roster',
+                                  value: `${filled} / ${expected} slots`,
+                                },
+                                {
+                                  label: 'Team',
+                                  value: `${members} member${members === 1 ? '' : 's'}`,
                                 },
                               ]}
-                            >
-                              <Typography variant="small" style={{ fontWeight: '700', color: accent }}>
-                                {child.websites.length}
-                              </Typography>
-                            </View>
-                          </Pressable>
-
-                          {child.websites.map((item) => (
-                            <WebsiteAssignmentRow
-                              key={item.websiteId}
-                              item={item}
-                              canAssign={gates.assign}
-                              onOpen={() =>
+                              onPress={() =>
                                 router.push(
                                   `/website-assigning/website/${encodeURIComponent(item.websiteId)}` as Href,
                                 )
                               }
-                              onSchedule={() =>
+                              onEditPress={() =>
                                 router.push(
-                                  `/website-assigning/website/${encodeURIComponent(item.websiteId)}/service-scheduling` as Href,
+                                  `/website-assigning/website/${encodeURIComponent(item.websiteId)}` as Href,
                                 )
                               }
-                              onTopics={() =>
-                                router.push(
-                                  `/website-assigning/website/${encodeURIComponent(item.websiteId)}/inquire-topics` as Href,
-                                )
+                              onDeletePress={
+                                gates.assign ? () => setClearTarget(item) : undefined
                               }
-                              onClear={() => setClearTarget(item)}
-                            />
-                          ))}
-                        </View>
-                      ))}
-                    </View>
+                              badge={
+                                <Pressable
+                                  onPress={() =>
+                                    router.push(
+                                      `/website-assigning/website/${encodeURIComponent(item.websiteId)}/service-scheduling` as Href,
+                                    )
+                                  }
+                                  hitSlop={8}
+                                  style={[
+                                    styles.scheduleBtn,
+                                    {
+                                      borderColor: glassUi.border.subtle,
+                                      backgroundColor: `${accent}16`,
+                                    },
+                                  ]}
+                                >
+                                  <Ionicons name="time-outline" size={16} color={accent} />
+                                </Pressable>
+                              }
+ />
+                          );
+                        })}
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
-            )}
+                </View>
+              ))}
+            </DataCardGrid>
           </ListTableCard>
         )}
       </ScrollView>
@@ -525,7 +546,7 @@ export function WebsiteAssignmentsListPage({
         isLoading={clearing}
         onDismiss={() => setClearTarget(null)}
         onConfirm={() => void handleClear()}
-      />
+ />
     </MobileScreen>
   );
 }
@@ -578,142 +599,9 @@ function FilterChips({
   );
 }
 
-function WebsiteAssignmentRow({
-  item,
-  canAssign,
-  onOpen,
-  onSchedule,
-  onTopics,
-  onClear,
-}: {
-  item: WebsiteAssignmentScopeItem;
-  canAssign: boolean;
-  onOpen: () => void;
-  onSchedule: () => void;
-  onTopics: () => void;
-  onClear: () => void;
-}) {
-  const theme = useAppTheme();
-  const accent = theme.app.dashboard.accentBlue;
-  const filled = item.filledSlots ?? item.assignedCount ?? 0;
-  const expected = item.expectedRosterSlots ?? 0;
-  const hoursReady = Boolean(item.serviceSchedulingConfigured || item.serviceHoursConfigured);
-
-  return (
-    <Pressable
-      onPress={onOpen}
-      style={({ pressed }) => [
-        styles.siteRow,
-        {
-          borderColor: theme.app.dashboard.cardBorder,
-          backgroundColor: 'rgba(255,255,255,0.04)',
-          opacity: pressed ? 0.92 : 1,
-        },
-      ]}
-    >
-      <View
-        style={[
-          styles.siteIcon,
-          { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
-        ]}
-      >
-        <Ionicons name="globe-outline" size={18} color={accent} />
-      </View>
-      <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
-        <Typography variant="medium16" style={{ fontWeight: '700' }} numberOfLines={1}>
-          {websiteLabel(item)}
-        </Typography>
-        {item.url ? (
-          <Typography variant="small" muted numberOfLines={1}>
-            {item.url}
-          </Typography>
-        ) : null}
-        <View style={styles.chipRow}>
-          <StatusChip
-            label={`${filled}${expected ? `/${expected}` : ''} agents`}
-            tone={item.isFullyAssigned ? 'success' : filled > 0 ? 'info' : 'neutral'}
-          />
-          <StatusChip label={hoursReady ? 'Hours' : 'No hours'} tone={hoursReady ? 'success' : 'warning'} />
-          <StatusChip
-            label={item.visitorTopicsConfigured ? 'Topics' : 'No topics'}
-            tone={item.visitorTopicsConfigured ? 'success' : 'warning'}
-          />
-        </View>
-        <View style={styles.iconActions}>
-          <IconAction icon="time-outline" label="Hours" onPress={onSchedule} />
-          <IconAction icon="chatbubbles-outline" label="Topics" onPress={onTopics} />
-          {canAssign && filled > 0 ? (
-            <IconAction icon="trash-outline" label="Clear" danger onPress={onClear} />
-          ) : null}
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={16} color={theme.app.text.secondary} />
-    </Pressable>
-  );
-}
-
-function IconAction({
-  icon,
-  label,
-  onPress,
-  danger,
-}: {
-  icon: ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  onPress: () => void;
-  danger?: boolean;
-}) {
-  const theme = useAppTheme();
-  const color = danger ? theme.app.danger : theme.app.dashboard.accentBlue;
-  return (
-    <Pressable
-      onPress={(e) => {
-        e.stopPropagation?.();
-        onPress();
-      }}
-      hitSlop={6}
-      style={({ pressed }) => [
-        styles.iconAction,
-        {
-          borderColor: danger ? 'rgba(239,68,68,0.28)' : glassUi.border.subtle,
-          backgroundColor: danger ? 'rgba(239,68,68,0.12)' : `${theme.app.dashboard.accentBlue}16`,
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <Ionicons name={icon} size={14} color={color} />
-      <Typography variant="small" style={{ fontWeight: '600', color }}>
-        {label}
-      </Typography>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, paddingHorizontal: 8 },
   scroll: { paddingBottom: 28 },
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  filterToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  quickChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  filterSheet: {
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 14,
-    gap: 14,
-  },
   addCta: {
     position: 'relative',
     overflow: 'hidden',
@@ -759,27 +647,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
   },
-  centered: {
-    minHeight: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  empty: {
-    paddingVertical: 28,
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 16,
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    marginBottom: 4,
-  },
   parentCard: {
     borderWidth: 1,
     borderRadius: 18,
@@ -798,42 +665,27 @@ const styles = StyleSheet.create({
   childHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
-    paddingHorizontal: 2,
+    flexWrap: 'wrap',
   },
-  countPill: {
-    minWidth: 26,
-    height: 26,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-    borderWidth: 1,
-  },
-  siteRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  siteIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  iconActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
-  iconAction: {
+  childPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
+    borderWidth: 1,
+    maxWidth: '100%',
+    flexShrink: 1,
+  },
+  scheduleBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
   },
 });

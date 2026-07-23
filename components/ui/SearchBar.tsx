@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { useThemeColors } from '@/lib/theme/use-theme-colors';
 import { tokens } from '@/theme/tokens';
 
 export type SearchBarProps = {
@@ -8,18 +9,43 @@ export type SearchBarProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   style?: StyleProp<ViewStyle>;
+  onSubmit?: () => void;
 };
 
-export function SearchBar({ value, onChange, placeholder = 'Search anything..', style }: SearchBarProps) {
+export function SearchBar({
+  value,
+  onChange,
+  placeholder = 'Search anything...',
+  style,
+  onSubmit,
+}: SearchBarProps) {
+  const c = useThemeColors();
+
   return (
-    <View style={[styles.shell, style]}>
-      <Ionicons name="search" size={18} color={tokens.colors.textMuted} />
+    <View
+      style={[
+        styles.shell,
+        {
+          backgroundColor: c.isLight
+            ? c.overlayLight || c.pillBg
+            : c.surfaceElevated || c.pillBg || 'rgba(255,255,255,0.08)',
+          borderColor: c.inputBorder || c.cardBorder,
+        },
+        style,
+      ]}
+    >
+      <Ionicons name="search" size={18} color={c.textMuted} />
       <TextInput
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={tokens.colors.textPlaceholder}
-        style={styles.input}
+        placeholderTextColor={c.textPlaceholder}
+        style={[styles.input, { color: c.textPrimary }]}
+        returnKeyType="search"
+        onSubmitEditing={onSubmit}
+        clearButtonMode="never"
+        autoCorrect={false}
+        autoCapitalize="none"
       />
       {value ? (
         <Pressable
@@ -29,7 +55,7 @@ export function SearchBar({ value, onChange, placeholder = 'Search anything..', 
           onPress={() => onChange('')}
           style={styles.clearButton}
         >
-          <Ionicons name="close" size={16} color={tokens.colors.textMuted} />
+          <Ionicons name="close-circle" size={18} color={c.textMuted} />
         </Pressable>
       ) : null}
     </View>
@@ -40,19 +66,20 @@ const styles = StyleSheet.create({
   shell: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'stretch',
+    width: '100%',
     gap: tokens.space.sm,
     paddingHorizontal: tokens.space.md,
-    height: 44,
-    borderRadius: tokens.radius.pill,
-    backgroundColor: tokens.colors.pillBg,
+    minHeight: 44,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: tokens.colors.cardBorder,
   },
   input: {
     flex: 1,
-    color: tokens.colors.textPrimary,
     fontSize: 14,
-    padding: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    minWidth: 0,
   },
   clearButton: {
     padding: 2,

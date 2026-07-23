@@ -92,7 +92,7 @@ export function MonitorQueueSidebar({
           placeholder="Search by name, site, or ID…"
           placeholderTextColor={tokens.colors.textPlaceholder}
           style={styles.searchInput}
-        />
+ />
       </View>
 
       <FlatList
@@ -156,7 +156,7 @@ export function MonitorQueueSidebar({
             </Pressable>
           );
         }}
-      />
+  showsVerticalScrollIndicator={false}/>
     </View>
   );
 }

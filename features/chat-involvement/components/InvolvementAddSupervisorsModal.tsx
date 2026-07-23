@@ -104,7 +104,7 @@ export function InvolvementAddSupervisorsModal({ open, onClose, canEdit, saving,
           </Pressable>
         </View>
 
-        <ScrollView style={{ maxHeight: "72%" }}>
+        <ScrollView style={{ maxHeight: "72%" }} showsVerticalScrollIndicator={false}>
           <View style={{ gap: tokens.space.md }}>
             <InvolvementOrgScopeFields scope={modalScope} canEdit={canEdit} disabled={saving} />
 
@@ -115,7 +115,7 @@ export function InvolvementAddSupervisorsModal({ open, onClose, canEdit, saving,
               options={deptOptions}
               disabled={!canEdit || saving || !modalScope.websiteId.trim() || externalDepts.length === 0}
               searchPlaceholder="Search department…"
-            />
+ />
 
             {activeDept ? (
               <AppCard style={styles.deptHint}>
@@ -136,7 +136,7 @@ export function InvolvementAddSupervisorsModal({ open, onClose, canEdit, saving,
                 onChangeSelectedIds={setSelectedUserIds}
                 canEdit={canEdit}
                 disabled={saving}
-              />
+ />
             ) : (
               <Typography variant="small" muted>
                 Complete website + department to list users.

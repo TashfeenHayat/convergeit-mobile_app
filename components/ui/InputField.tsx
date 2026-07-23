@@ -15,6 +15,7 @@ import {
   useAuthOnGlass,
 } from "@/components/auth/AuthOnGlassContext";
 import { Typography } from "@/components/ui/Typography";
+import { useThemeColors } from "@/lib/theme/use-theme-colors";
 import { tokens } from "@/theme/tokens";
 
 export type InputFieldProps = TextInputProps & {
@@ -34,33 +35,34 @@ export function InputField({
   ...rest
 }: InputFieldProps) {
   const onGlass = useAuthOnGlass();
+  const c = useThemeColors();
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = Boolean(secureTextEntry);
   const borderColor = error
-    ? tokens.colors.danger
+    ? c.danger
     : focused
-      ? tokens.colors.accentBlue
+      ? c.accentBlue
       : onGlass
         ? authOnGlassText.border
-        : tokens.colors.inputBorder;
+        : c.inputBorder;
   const labelColor = error
-    ? tokens.colors.danger
+    ? c.danger
     : onGlass
       ? authOnGlassText.primary
-      : tokens.colors.textPrimary;
-  const inputColor = onGlass ? authOnGlassText.primary : tokens.colors.textPrimary;
+      : c.textPrimary;
+  const inputColor = onGlass ? authOnGlassText.primary : c.textPrimary;
   const placeholderColor = onGlass
     ? authOnGlassText.placeholder
-    : tokens.colors.textPlaceholder;
+    : c.textPlaceholder;
   const iconColor = onGlass
     ? authOnGlassText.secondary
-    : tokens.colors.textSecondary;
+    : c.textSecondary;
   const helperColor = error
-    ? tokens.colors.danger
+    ? c.danger
     : onGlass
       ? authOnGlassText.secondary
-      : tokens.colors.textMuted;
+      : c.textMuted;
 
   return (
     <View style={[styles.container, containerStyle]}>

@@ -114,7 +114,7 @@ export function MultiUserCheckboxPicker({
           placeholder="Name, email, pool…"
           editable={canEdit && !disabled}
           containerStyle={{ flex: 1 }}
-        />
+ />
         {canEdit && !disabled ? (
           <View style={styles.linkRow}>
             <Pressable onPress={pickAllVisible}>
@@ -151,7 +151,7 @@ export function MultiUserCheckboxPicker({
       ) : null}
 
       {!usersQuery.isLoading && filtered.length > 0 ? (
-        <ScrollView style={styles.list} nestedScrollEnabled>
+        <ScrollView style={styles.list} nestedScrollEnabled showsVerticalScrollIndicator={false}>
           {filtered.map((u) => (
             <Checkbox
               key={u.id}
@@ -160,7 +160,7 @@ export function MultiUserCheckboxPicker({
               onChange={() => toggle(u.id)}
               disabled={!canEdit || disabled}
               style={styles.checkboxRow}
-            />
+ />
           ))}
         </ScrollView>
       ) : null}

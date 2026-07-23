@@ -152,14 +152,14 @@ export const ResellerModulesPanel = forwardRef<ResellerModulesPanelHandle, Resel
           selected={effectiveSelected}
           readOnly={readOnly}
           onToggle={toggle}
-        />
+ />
         <ModuleGroup
           title="Service modules"
           items={service}
           selected={effectiveSelected}
           readOnly={readOnly}
           onToggle={toggle}
-        />
+ />
 
         {!readOnly && !hideSaveButton ? (
           <Button
@@ -175,7 +175,7 @@ export const ResellerModulesPanel = forwardRef<ResellerModulesPanelHandle, Resel
     );
 
     if (embedded) return body;
-    return <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>{body}</ScrollView>;
+    return <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }} showsVerticalScrollIndicator={false}>{body}</ScrollView>;
   },
 );
 
@@ -206,7 +206,7 @@ function ModuleGroup({
           disabled={readOnly}
           onChange={() => onToggle(mod.code)}
           label={mod.name}
-        />
+ />
       ))}
     </View>
   );

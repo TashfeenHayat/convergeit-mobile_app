@@ -84,8 +84,7 @@ export function DataTable<T extends object>({
           horizontal
           showsHorizontalScrollIndicator
           style={style}
-          contentContainerStyle={styles.scrollContent}
-        >
+          contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={[styles.table, { minWidth: computedMinWidth }]}>
             <View style={styles.headerRow}>
               {columns.map((col) => {
@@ -158,7 +157,7 @@ export function DataTable<T extends object>({
                               styles.skeletonBlock,
                               { width: Math.max(40, width * (0.55 - colIdx * 0.06)) },
                             ]}
-                          />
+ />
                         ) : col.render ? (
                           col.render(
                             (row as Record<string, unknown>)[col.id],

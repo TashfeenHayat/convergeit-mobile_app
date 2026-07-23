@@ -76,7 +76,7 @@ export function QaQueueSidebar({
           placeholder="Search queue…"
           placeholderTextColor={tokens.colors.textMuted}
           style={styles.search}
-        />
+ />
       </View>
 
       {loading ? (
@@ -111,7 +111,7 @@ export function QaQueueSidebar({
               </Pressable>
             );
           }}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </View>
   );

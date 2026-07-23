@@ -1,76 +1,49 @@
-import type { IconType } from "react-icons";
-import {
-  PiBellDuotone,
-  PiChatCenteredDotsDuotone,
-  PiChatCenteredDuotone,
-  PiChatCenteredTextDuotone,
-  PiChatCircleDotsDuotone,
-  PiChatCircleDuotone,
-  PiChatCircleTextDuotone,
-  PiChatDotsDuotone,
-  PiChatDuotone,
-  PiChatTeardropDotsDuotone,
-  PiChatTeardropDuotone,
-  PiChatTextDuotone,
-  PiChatsCircleDuotone,
-  PiChatsDuotone,
-  PiChatsTeardropDuotone,
-  PiEnvelopeDuotone,
-  PiHandWavingDuotone,
-  PiHeadphonesDuotone,
-  PiHeadsetDuotone,
-  PiHeartStraightDuotone,
-  PiLifebuoyDuotone,
-  PiMegaphoneDuotone,
-  PiPhoneCallDuotone,
-  PiQuestionDuotone,
-  PiRobotDuotone,
-  PiSparkleDuotone,
-  PiUserCircleDuotone,
-  PiUsersDuotone,
-  PiWhatsappLogoDuotone,
-} from "react-icons/pi";
+import type { ComponentProps } from 'react';
+import type Ionicons from '@expo/vector-icons/Ionicons';
+
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export const LAUNCHER_ICON_PRESETS = [
-  { id: "phosphor-chat-circle", label: "Chat circle", Icon: PiChatCircleDuotone },
-  { id: "phosphor-chats-circle", label: "Chats circle", Icon: PiChatsCircleDuotone },
-  { id: "phosphor-chat-dots", label: "Chat dots", Icon: PiChatDotsDuotone },
-  { id: "phosphor-chat-teardrop", label: "Chat teardrop", Icon: PiChatTeardropDuotone },
-  { id: "phosphor-chat", label: "Chat", Icon: PiChatDuotone },
-  { id: "phosphor-chat-text", label: "Chat text", Icon: PiChatTextDuotone },
-  { id: "phosphor-chat-centered", label: "Chat centered", Icon: PiChatCenteredDuotone },
-  { id: "phosphor-chat-centered-dots", label: "Centered dots", Icon: PiChatCenteredDotsDuotone },
-  { id: "phosphor-chat-centered-text", label: "Centered text", Icon: PiChatCenteredTextDuotone },
-  { id: "phosphor-chat-circle-dots", label: "Circle dots", Icon: PiChatCircleDotsDuotone },
-  { id: "phosphor-chat-circle-text", label: "Circle text", Icon: PiChatCircleTextDuotone },
-  { id: "phosphor-chat-teardrop-dots", label: "Teardrop dots", Icon: PiChatTeardropDotsDuotone },
-  { id: "phosphor-chats", label: "Chats", Icon: PiChatsDuotone },
-  { id: "phosphor-chats-teardrop", label: "Chats teardrop", Icon: PiChatsTeardropDuotone },
-  { id: "phosphor-headset", label: "Headset", Icon: PiHeadsetDuotone },
-  { id: "phosphor-headphones", label: "Headphones", Icon: PiHeadphonesDuotone },
-  { id: "phosphor-lifebuoy", label: "Support", Icon: PiLifebuoyDuotone },
-  { id: "phosphor-robot", label: "AI bot", Icon: PiRobotDuotone },
-  { id: "phosphor-hand-waving", label: "Wave", Icon: PiHandWavingDuotone },
-  { id: "phosphor-megaphone", label: "Megaphone", Icon: PiMegaphoneDuotone },
-  { id: "phosphor-phone-call", label: "Phone call", Icon: PiPhoneCallDuotone },
-  { id: "phosphor-envelope", label: "Email", Icon: PiEnvelopeDuotone },
-  { id: "phosphor-bell", label: "Bell", Icon: PiBellDuotone },
-  { id: "phosphor-question", label: "Help", Icon: PiQuestionDuotone },
-  { id: "phosphor-user-circle", label: "Agent", Icon: PiUserCircleDuotone },
-  { id: "phosphor-users", label: "Team", Icon: PiUsersDuotone },
-  { id: "phosphor-sparkle", label: "Sparkle", Icon: PiSparkleDuotone },
-  { id: "phosphor-heart-straight", label: "Heart", Icon: PiHeartStraightDuotone },
-  { id: "phosphor-whatsapp-logo", label: "WhatsApp", Icon: PiWhatsappLogoDuotone },
+  { id: 'phosphor-chat-circle', label: 'Chat circle', ionicon: 'chatbubble-outline' },
+  { id: 'phosphor-chats-circle', label: 'Chats circle', ionicon: 'chatbubbles-outline' },
+  { id: 'phosphor-chat-dots', label: 'Chat dots', ionicon: 'chatbox-ellipses-outline' },
+  { id: 'phosphor-chat-teardrop', label: 'Chat teardrop', ionicon: 'chatbubble-ellipses-outline' },
+  { id: 'phosphor-chat', label: 'Chat', ionicon: 'chatbox-outline' },
+  { id: 'phosphor-chat-text', label: 'Chat text', ionicon: 'chatbox' },
+  { id: 'phosphor-chat-centered', label: 'Chat centered', ionicon: 'chatbubble' },
+  { id: 'phosphor-chat-centered-dots', label: 'Centered dots', ionicon: 'chatbubbles' },
+  { id: 'phosphor-chat-centered-text', label: 'Centered text', ionicon: 'chatbubble-outline' },
+  { id: 'phosphor-chat-circle-dots', label: 'Circle dots', ionicon: 'chatbubble-ellipses-outline' },
+  { id: 'phosphor-chat-circle-text', label: 'Circle text', ionicon: 'chatbubble' },
+  { id: 'phosphor-chat-teardrop-dots', label: 'Teardrop dots', ionicon: 'chatbox-ellipses-outline' },
+  { id: 'phosphor-chats', label: 'Chats', ionicon: 'chatbubbles-outline' },
+  { id: 'phosphor-chats-teardrop', label: 'Chats teardrop', ionicon: 'chatbubbles' },
+  { id: 'phosphor-headset', label: 'Headset', ionicon: 'headset-outline' },
+  { id: 'phosphor-headphones', label: 'Headphones', ionicon: 'headset' },
+  { id: 'phosphor-lifebuoy', label: 'Support', ionicon: 'help-buoy-outline' },
+  { id: 'phosphor-robot', label: 'AI bot', ionicon: 'hardware-chip-outline' },
+  { id: 'phosphor-hand-waving', label: 'Wave', ionicon: 'hand-left-outline' },
+  { id: 'phosphor-megaphone', label: 'Megaphone', ionicon: 'megaphone-outline' },
+  { id: 'phosphor-phone-call', label: 'Phone call', ionicon: 'call-outline' },
+  { id: 'phosphor-envelope', label: 'Email', ionicon: 'mail-outline' },
+  { id: 'phosphor-bell', label: 'Bell', ionicon: 'notifications-outline' },
+  { id: 'phosphor-question', label: 'Help', ionicon: 'help-circle-outline' },
+  { id: 'phosphor-user-circle', label: 'Agent', ionicon: 'person-circle-outline' },
+  { id: 'phosphor-users', label: 'Team', ionicon: 'people-outline' },
+  { id: 'phosphor-sparkle', label: 'Sparkle', ionicon: 'star-outline' },
+  { id: 'phosphor-heart-straight', label: 'Heart', ionicon: 'heart-outline' },
+  { id: 'phosphor-whatsapp-logo', label: 'WhatsApp', ionicon: 'logo-whatsapp' },
 ] as const satisfies ReadonlyArray<{
   id: string;
   label: string;
-  Icon: IconType;
+  ionicon: IoniconName;
 }>;
 
-export type LauncherIconPresetIdNonEmpty = (typeof LAUNCHER_ICON_PRESETS)[number]["id"];
+export type LauncherIconPresetIdNonEmpty =
+  (typeof LAUNCHER_ICON_PRESETS)[number]['id'];
 
 /** Empty string = custom uploaded icon override. */
-export type LauncherIconPresetId = "" | LauncherIconPresetIdNonEmpty;
+export type LauncherIconPresetId = '' | LauncherIconPresetIdNonEmpty;
 
 export const LAUNCHER_ICON_PRESET_ID_SET = new Set<string>(
   LAUNCHER_ICON_PRESETS.map((p) => p.id),
@@ -78,10 +51,10 @@ export const LAUNCHER_ICON_PRESET_ID_SET = new Set<string>(
 
 export function normalizeLauncherIconPreset(
   value: unknown,
-  fallback: LauncherIconPresetId = "phosphor-chat-circle",
+  fallback: LauncherIconPresetId = 'phosphor-chat-circle',
 ): LauncherIconPresetId {
-  if (value === "") return "";
-  if (typeof value === "string" && LAUNCHER_ICON_PRESET_ID_SET.has(value)) {
+  if (value === '') return '';
+  if (typeof value === 'string' && LAUNCHER_ICON_PRESET_ID_SET.has(value)) {
     return value as LauncherIconPresetIdNonEmpty;
   }
   return fallback;

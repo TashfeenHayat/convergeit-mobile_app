@@ -113,6 +113,28 @@ export function textUsFormFieldsPreviewPayload(
   return resolveTextUsFormFields(fields).map(compactFieldRow);
 }
 
+/**
+ * Persist under `theme.designJson.textUs.fields` (BOTH) or `config.form.fields` (TEXT_US-only).
+ * Includes both `type` and `fieldType` so embed + admin hydrate agree.
+ */
+export function textUsFormFieldsToApiPayload(
+  fields?: TextUsFormFieldDraft[],
+): Record<string, unknown>[] {
+  return resolveTextUsFormFields(fields).map((f) => {
+    const type = String(f.fieldType ?? "text").toLowerCase();
+    const row: Record<string, unknown> = {
+      key: String(f.key),
+      label: String(f.label ?? f.key),
+      required: Boolean(f.required),
+      type,
+      fieldType: type,
+    };
+    const ph = f.placeholder?.trim();
+    if (ph) row.placeholder = ph;
+    return row;
+  });
+}
+
 export function textUsSavedConfigPreview(input: {
   theme: Parameters<typeof textUsThemePreviewPayload>[0];
   fields: TextUsFormFieldDraft[];

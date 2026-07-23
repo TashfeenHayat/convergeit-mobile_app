@@ -141,7 +141,7 @@ export function DistributionListPage() {
               <TablePagination page={page} pageCount={totalPages} onPageChange={setPage} />
             ) : null
           }
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );

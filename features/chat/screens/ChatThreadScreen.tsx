@@ -228,7 +228,7 @@ export function ChatThreadScreen() {
                 No messages yet.
               </Typography>
             }
-          />
+           showsVerticalScrollIndicator={false}/>
         )}
 
         <View

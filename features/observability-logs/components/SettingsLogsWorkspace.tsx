@@ -77,7 +77,7 @@ export function SettingsLogsWorkspace() {
           ]}
           value={logs.tab}
           onChange={(v) => logs.setTab(v as ObservabilityLogTab)}
-        />
+ />
         <ChatScopeFiltersToolbar
           filters={scopeFilters.filters}
           onPatch={scopeFilters.patchFilters}
@@ -88,7 +88,7 @@ export function SettingsLogsWorkspace() {
           childCompanyOptions={scopeFilters.childCompanyOptions}
           websiteOptions={scopeFilters.websiteOptions}
           title="Log scope filters"
-        />
+ />
         {logs.tab === "audit" ? (
           <SelectField
             label="Severity"
@@ -101,7 +101,7 @@ export function SettingsLogsWorkspace() {
               { label: "Error", value: "error" },
             ]}
             searchable={false}
-          />
+ />
         ) : null}
         <SearchBar
           value={logs.eventType}
@@ -110,7 +110,7 @@ export function SettingsLogsWorkspace() {
             logs.setPage(1);
           }}
           placeholder="Filter by event type…"
-        />
+ />
       </View>
 
       {logs.loading ? (
@@ -159,10 +159,10 @@ export function SettingsLogsWorkspace() {
                 page={logs.page}
                 pageCount={logs.totalPages}
                 onPageChange={logs.setPage}
-              />
+ />
             ) : null
           }
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <LogDetailDrawer
@@ -170,7 +170,7 @@ export function SettingsLogsWorkspace() {
         logId={detailId}
         tab={logs.tab}
         onClose={() => setDetailId(null)}
-      />
+ />
     </MobileScreen>
   );
 }

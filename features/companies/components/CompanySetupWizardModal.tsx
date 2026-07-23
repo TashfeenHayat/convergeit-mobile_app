@@ -327,7 +327,7 @@ export function CompanySetupWizardModal({
     createDraftMutation.isPending || updateDraftMutation.isPending || submitDraftMutation.isPending;
 
   const content = (
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }} showsVerticalScrollIndicator={false}>
       {!hideInternalStepper ? (
         <Typography variant="small" muted>
           Step {step} of 2 — {step === 1 ? "Reseller / parent" : "Child company"}
@@ -344,7 +344,7 @@ export function CompanySetupWizardModal({
                 { value: "new_reseller", label: "New reseller" },
                 { value: "existing_reseller", label: "Existing reseller" },
               ]}
-            />
+ />
           ) : null}
           {setupKind === "existing_reseller" ? (
             <SelectField
@@ -356,14 +356,14 @@ export function CompanySetupWizardModal({
                   ? resellerOptions
                   : [{ value: "", label: resellersQuery.isLoading ? "Loading…" : "No resellers" }]
               }
-            />
+ />
           ) : null}
           <InputField
             label="Parent company name"
             value={parentCompanyName}
             onChangeText={setParentCompanyName}
             placeholder="Agency or client parent"
-          />
+ />
         </>
       ) : (
         <>
@@ -373,7 +373,7 @@ export function CompanySetupWizardModal({
             onChangeText={setChildName}
             error={showErrors && Boolean(getRequiredError(childName, "Child company name"))}
             helperText={showErrors ? getRequiredError(childName, "Child company name") ?? undefined : undefined}
-          />
+ />
           <InputField
             label="Email"
             value={childEmail}
@@ -386,21 +386,21 @@ export function CompanySetupWizardModal({
                 ? getEmailValidationError(childEmail, { required: true }) ?? undefined
                 : undefined
             }
-          />
+ />
           <PhoneInputField
             label="Phone"
             value={childPhone}
             onChangeText={setChildPhone}
             required
             error={showErrors && Boolean(getPhoneValidationError(childPhone, { required: true }))}
-          />
+ />
           <InputField
             label="Address"
             value={childAddress}
             onChangeText={setChildAddress}
             error={showErrors && Boolean(getRequiredError(childAddress, "Address"))}
             helperText={showErrors ? getRequiredError(childAddress, "Address") ?? undefined : undefined}
-          />
+ />
           <InputField label="Website URL" value={websiteUrl} onChangeText={setWebsiteUrl} autoCapitalize="none" />
           <Typography variant="medium16" style={{ fontWeight: "600", marginTop: 8 }}>
             Point of contact
@@ -411,7 +411,7 @@ export function CompanySetupWizardModal({
             onChangeText={setPocFirstName}
             error={showErrors && Boolean(getRequiredError(pocFirstName, "POC first name"))}
             helperText={showErrors ? getRequiredError(pocFirstName, "POC first name") ?? undefined : undefined}
-          />
+ />
           <InputField
             label="POC email"
             value={pocEmail}
@@ -424,7 +424,7 @@ export function CompanySetupWizardModal({
                 ? getEmailValidationError(pocEmail, { required: true, label: "POC email" }) ?? undefined
                 : undefined
             }
-          />
+ />
           <SelectField
             label="POC role"
             value={pocRoleId}
@@ -432,7 +432,7 @@ export function CompanySetupWizardModal({
             options={roleOptions.length ? roleOptions : [{ value: "", label: "Loading roles…" }]}
             error={showErrors && !pocRoleId.trim()}
             helperText={showErrors && !pocRoleId.trim() ? "Select a POC role." : undefined}
-          />
+ />
         </>
       )}
     </ScrollView>

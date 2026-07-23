@@ -125,7 +125,7 @@ export function InvolvementUsersTab({ filters, canFilterByResellerId, canEdit, a
             </View>
           )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <InvolvementAddSupervisorsModal
@@ -147,7 +147,7 @@ export function InvolvementUsersTab({ filters, canFilterByResellerId, canEdit, a
             },
           );
         }}
-      />
+ />
     </InvolvementTabToolbarCard>
   );
 }

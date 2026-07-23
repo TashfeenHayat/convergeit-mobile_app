@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   RefreshControl,
@@ -16,9 +15,10 @@ import {
   AppCard,
   Button,
   ConfirmActionModal,
+  DataCardGrid,
+  EntityListCard,
   ListTableCard,
   SearchBar,
-  StatusChip,
   TablePagination,
   Typography,
 } from '@/components/ui';
@@ -51,6 +51,8 @@ type UserRow = {
   lastName: string;
   roleId: string;
   departmentId: string;
+  departmentName: string;
+  resellerName: string;
   roleName: string;
 };
 
@@ -64,7 +66,12 @@ function parseRows(data: unknown): UserRow[] {
       const lastName = pickStr(r, ['lastName', 'last_name']);
       const role = isRecord(r.role) ? r.role : null;
       const dept = isRecord(r.department) ? r.department : null;
+      const reseller = isRecord(r.reseller) ? r.reseller : null;
       const userTypeRaw = pickStr(r, ['userType', 'type']) || 'Internal';
+      const resellerName =
+        pickStr(reseller, ['name']) ||
+        pickStr(r, ['resellerName', 'companyName', 'company']) ||
+        '';
       return {
         id,
         firstName,
@@ -74,6 +81,9 @@ function parseRows(data: unknown): UserRow[] {
         userType: userTypeRaw,
         roleId: pickStr(r, ['roleId']) || pickStr(role, ['id']),
         departmentId: pickStr(r, ['departmentId']) || pickStr(dept, ['id']),
+        departmentName:
+          pickStr(dept, ['name']) || pickStr(r, ['departmentName', 'department']) || '',
+        resellerName: resellerName && resellerName !== '-' ? resellerName : '',
         roleName: pickStr(role, ['name']) || pickStr(r, ['roleName']) || '',
       };
     })
@@ -134,6 +144,9 @@ export function UsersListPage() {
     setModalOpen(true);
   };
 
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+
   const filterOptions = useMemo(() => {
     const opts: { value: 'all' | 'Internal' | 'External'; label: string }[] = [
       { value: 'all', label: 'All' },
@@ -148,6 +161,8 @@ export function UsersListPage() {
       <ScrollView
         contentContainerStyle={[styles.scroll, { gap: theme.spacing.md }]}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={query.isRefetching && !query.isLoading}
@@ -164,7 +179,7 @@ export function UsersListPage() {
               setPage(1);
             }}
             placeholder="Search users…"
-          />
+ />
 
           <View style={styles.filterRow}>
             {filterOptions.map((opt) => {
@@ -221,7 +236,7 @@ export function UsersListPage() {
                   styles.addCtaGlow,
                   { backgroundColor: `${theme.app.dashboard.accentBlue}18` },
                 ]}
-              />
+ />
               <View
                 style={[
                   styles.addCtaIcon,
@@ -254,7 +269,7 @@ export function UsersListPage() {
                   name="arrow-forward"
                   size={16}
                   color={theme.app.dashboard.accentBlue}
-                />
+ />
               </View>
             </Pressable>
           ) : null}
@@ -265,7 +280,7 @@ export function UsersListPage() {
           internalCount={stats.internalCount}
           externalCount={stats.externalCount}
           showInternal={showInternal}
-        />
+ />
 
         {query.isError ? (
           <AppCard style={{ gap: 10 }}>
@@ -282,152 +297,57 @@ export function UsersListPage() {
             subtitle={`${total} result${total === 1 ? '' : 's'}`}
             icon="people-outline"
             toolbar={null}
-            footer={
-              pageCount > 1 ? (
-                <TablePagination page={page} pageCount={pageCount} onPageChange={setPage} />
-              ) : undefined
-            }
           >
-            {query.isLoading && !query.data ? (
-              <View style={styles.centered}>
-                <ActivityIndicator color={theme.app.dashboard.accentBlue} />
-                <Typography variant="small" muted>
-                  Loading users…
-                </Typography>
-              </View>
-            ) : rows.length === 0 ? (
-              <View style={styles.empty}>
-                <View
-                  style={[
-                    styles.emptyIcon,
-                    {
-                      backgroundColor: `${theme.app.dashboard.accentBlue}22`,
-                      borderColor: glassUi.border.subtle,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="people-outline"
-                    size={28}
-                    color={theme.app.dashboard.accentBlue}
-                  />
-                </View>
-                <Typography variant="medium16" style={{ fontWeight: '700' }}>
-                  No users found
-                </Typography>
-                <Typography variant="small" muted style={{ textAlign: 'center' }}>
-                  {search.trim()
-                    ? 'Try a different search or filter.'
-                    : 'Create a user to grant access.'}
-                </Typography>
-                {canCreate ? (
+            <DataCardGrid
+              columns={1}
+              isLoading={query.isLoading && !query.data}
+              empty={rows.length === 0}
+              emptyState={{
+                title: 'No users found',
+                description: search.trim()
+                  ? 'Try a different search or filter.'
+                  : 'Create a user to grant access.',
+                icon: 'people-outline',
+                action: canCreate ? (
                   <Button size="compact" onPress={openCreate}>
                     Add user
                   </Button>
-                ) : null}
-              </View>
-            ) : (
-              <View style={{ gap: 8 }}>
-                {rows.map((row) => {
-                  const internal = isInternalType(row.userType);
-                  return (
-                    <Pressable
-                      key={row.id}
-                      onPress={() => {
-                        if (canUpdate) openEdit(row);
-                      }}
-                      disabled={!canUpdate && !canDelete}
-                      style={({ pressed }) => [
-                        styles.rowCard,
-                        {
-                          backgroundColor: theme.app.dashboard.overlayLight,
-                          borderColor: theme.app.dashboard.cardBorder,
-                          opacity: pressed && canUpdate ? 0.9 : 1,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.rowIcon,
-                          {
-                            backgroundColor: `${theme.app.dashboard.accentBlue}22`,
-                            borderColor: glassUi.border.subtle,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name={internal ? 'shield-outline' : 'person-outline'}
-                          size={18}
-                          color={theme.app.dashboard.accentBlue}
-                        />
-                      </View>
-                      <View style={styles.rowBody}>
-                        <View style={styles.rowTitleLine}>
-                          <Typography
-                            variant="medium16"
-                            style={styles.rowTitle}
-                            numberOfLines={1}
-                          >
-                            {row.name}
-                          </Typography>
-                          <StatusChip
-                            label={internal ? 'Internal' : 'External'}
-                            tone={internal ? 'info' : 'success'}
-                          />
-                        </View>
-                        <Typography variant="small" muted numberOfLines={1}>
-                          {row.email}
-                          {row.roleName ? ` · ${row.roleName}` : ''}
-                        </Typography>
-                      </View>
-                      <View style={styles.rowActions}>
-                        {canUpdate ? (
-                          <Pressable
-                            onPress={() => openEdit(row)}
-                            hitSlop={8}
-                            style={[
-                              styles.iconBtn,
-                              {
-                                backgroundColor: `${theme.app.dashboard.accentBlue}18`,
-                                borderColor: glassUi.border.subtle,
-                              },
-                            ]}
-                          >
-                            <Ionicons
-                              name="create-outline"
-                              size={16}
-                              color={theme.app.dashboard.accentBlue}
-                            />
-                          </Pressable>
-                        ) : null}
-                        {canDelete ? (
-                          <Pressable
-                            onPress={() => setDeleteId(row.id)}
-                            hitSlop={8}
-                            style={[
-                              styles.iconBtn,
-                              {
-                                backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                                borderColor: 'rgba(239, 68, 68, 0.28)',
-                              },
-                            ]}
-                          >
-                            <Ionicons name="trash-outline" size={16} color={theme.app.danger} />
-                          </Pressable>
-                        ) : null}
-                        {!canUpdate && !canDelete ? (
-                          <Ionicons
-                            name="chevron-forward"
-                            size={16}
-                            color={theme.app.text.secondary}
-                          />
-                        ) : null}
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
+                ) : undefined,
+              }}
+              showingLabel={
+                rows.length > 0 ? `Showing ${from} to ${to} of ${total} entries` : undefined
+              }
+              footerRight={
+                pageCount > 1 ? (
+                  <TablePagination page={page} pageCount={pageCount} onPageChange={setPage} />
+                ) : undefined
+              }
+            >
+              {rows.map((row) => {
+                const internal = isInternalType(row.userType);
+                return (
+                  <EntityListCard
+                    key={row.id}
+                    title={row.name}
+                    subtitle={row.email}
+                    details={[
+                      ...(row.roleName ? [{ label: 'Role', value: row.roleName }] : []),
+                      ...(row.departmentName
+                        ? [{ label: 'Department', value: row.departmentName }]
+                        : []),
+                      ...(row.resellerName
+                        ? [{ label: 'Reseller', value: row.resellerName }]
+                        : []),
+                    ]}
+                    badgeLabel={internal ? 'Internal' : 'External'}
+                    badgeTone={internal ? 'internal' : 'external'}
+                    onPress={canUpdate ? () => openEdit(row) : undefined}
+                    onEditPress={canUpdate ? () => openEdit(row) : undefined}
+                    onDeletePress={canDelete ? () => setDeleteId(row.id) : undefined}
+ />
+                );
+              })}
+            </DataCardGrid>
           </ListTableCard>
         )}
       </ScrollView>
@@ -441,7 +361,7 @@ export function UsersListPage() {
           setEditUserId(null);
         }}
         onSaved={() => void query.refetch()}
-      />
+ />
 
       <ConfirmActionModal
         open={Boolean(deleteId)}
@@ -460,13 +380,13 @@ export function UsersListPage() {
             Alert.alert('Delete failed', extractApiErrorMessage(err));
           }
         }}
-      />
+ />
     </MobileScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, paddingHorizontal: 8 },
   scroll: { paddingBottom: 28 },
   filterRow: {
     flexDirection: 'row',
@@ -524,57 +444,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-  },
-  empty: {
-    paddingVertical: 28,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    gap: 10,
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    marginBottom: 4,
-  },
-  rowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  rowIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  rowBody: { flex: 1, minWidth: 0, gap: 2 },
-  rowTitleLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  rowTitle: { flex: 1, fontWeight: '700' },
-  rowActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  iconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
   },
 });

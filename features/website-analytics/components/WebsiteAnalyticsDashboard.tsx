@@ -95,7 +95,7 @@ export function WebsiteAnalyticsDashboard() {
           childCompanyOptions={scope.childCompanyOptions}
           websiteOptions={scope.websiteOptions}
           title="Analytics scope"
-        />
+ />
         {websiteId ? (
           <SelectField
             label="Traffic source"
@@ -106,7 +106,7 @@ export function WebsiteAnalyticsDashboard() {
               ...(report?.trafficSources ?? []).map((s) => ({ label: s.label, value: s.source })),
             ]}
             searchable={false}
-          />
+ />
         ) : null}
       </View>
 
@@ -174,7 +174,7 @@ export function WebsiteAnalyticsDashboard() {
                   </AppCard>
                 </Pressable>
               )}
-            />
+  showsVerticalScrollIndicator={false}/>
           )}
         </>
       )}

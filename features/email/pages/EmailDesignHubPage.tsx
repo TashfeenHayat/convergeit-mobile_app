@@ -90,7 +90,7 @@ export function EmailDesignHubPage() {
             setPage(1);
           }}
           placeholder="Search reseller…"
-        />
+ />
         {canUpdate ? (
           <Button
             variant="outlined"
@@ -123,7 +123,7 @@ export function EmailDesignHubPage() {
               refreshing={catalogQuery.isRefetching && !catalogQuery.isLoading}
               onRefresh={() => void catalogQuery.refetch()}
               tintColor={theme.app.dashboard.accentBlue}
-            />
+          />
           }
           contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: 24 }}
           ListEmptyComponent={
@@ -142,7 +142,7 @@ export function EmailDesignHubPage() {
                 <StatusChip
                   label={item.usesPlatformDefault ? "Platform" : "Custom"}
                   tone={item.usesPlatformDefault ? "neutral" : "info"}
-                />
+ />
               </View>
               <Typography variant="small" muted>
                 Published: {formatPublishedAt(item.publishedAt)}
@@ -170,7 +170,7 @@ export function EmailDesignHubPage() {
               </View>
             ) : null
           }
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );

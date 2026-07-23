@@ -65,8 +65,7 @@ export function TablePagination({ page, pageCount, onPageChange, style }: TableP
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.row, style]}
-    >
+      contentContainerStyle={[styles.row, style]} showsVerticalScrollIndicator={false}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Previous page"

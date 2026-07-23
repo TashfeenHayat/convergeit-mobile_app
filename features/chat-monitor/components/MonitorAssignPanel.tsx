@@ -83,7 +83,7 @@ export function MonitorAssignPanel({ conversationId, currentAgentId, onAssigned 
           </Pressable>
         );
       }}
-    />
+  showsVerticalScrollIndicator={false}/>
   );
 }
 

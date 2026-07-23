@@ -117,7 +117,7 @@ export function SelectField({
                     placeholder={searchPlaceholder ?? 'Search…'}
                     placeholderTextColor={tokens.colors.textPlaceholder}
                     style={styles.searchInput}
-                  />
+ />
                 </LiquidGlass>
               ) : null}
               <FlatList
@@ -153,7 +153,7 @@ export function SelectField({
                     </Typography>
                   </View>
                 }
-              />
+  showsVerticalScrollIndicator={false}/>
             </LiquidGlass>
           </Pressable>
         </Pressable>

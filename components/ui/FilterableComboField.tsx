@@ -96,7 +96,7 @@ export function FilterableComboField({
           placeholder={placeholder}
           placeholderTextColor={tokens.colors.textPlaceholder}
           style={styles.input}
-        />
+ />
         {draft.trim().length > 0 && !disabled ? (
           <Pressable
             accessibilityRole="button"
@@ -139,7 +139,7 @@ export function FilterableComboField({
                   </Pressable>
                 );
               }}
-            />
+  showsVerticalScrollIndicator={false}/>
           )}
         </View>
       ) : null}

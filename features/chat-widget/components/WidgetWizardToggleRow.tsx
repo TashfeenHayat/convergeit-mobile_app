@@ -1,32 +1,56 @@
-import type { ReactNode } from "react";
-/**
- * React Native port shell — source: converge_saas_frontend/features/chat-widget/components/WidgetWizardToggleRow.tsx
- * Public exports preserved so the mobile tree mirrors web 1:1.
- * Replace shell UI with full RN layout as the feature is productized.
- */
-import { View, StyleSheet } from "react-native";
-import { Typography } from "@/components/ui";
-import { tokens } from "@/theme/tokens";
+import { Switch, StyleSheet, View } from 'react-native';
+
+import { Typography } from '@/components/ui';
 
 export type WidgetWizardToggleRowProps = {
-  children?: ReactNode;
-  title?: string;
-  [key: string]: unknown;
+  label: string;
+  description?: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
 };
 
-export function WidgetWizardToggleRow(props: WidgetWizardToggleRowProps) {
-  const label = props.title ?? "WidgetWizardToggleRow";
+export function WidgetWizardToggleRow({
+  label,
+  description,
+  value,
+  onChange,
+  disabled,
+}: WidgetWizardToggleRowProps) {
   return (
-    <View style={styles.shell} accessibilityLabel={label}>
-      <Typography variant="medium">{label}</Typography>
-      {props.children}
+    <View style={styles.row}>
+      <View style={styles.copy}>
+        <Typography variant="medium" style={{ fontWeight: '600' }}>
+          {label}
+        </Typography>
+        {description ? (
+          <Typography variant="small" muted>
+            {description}
+          </Typography>
+        ) : null}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+        trackColor={{ false: '#475569', true: '#22C55E' }}
+        thumbColor="#FFFFFF"
+        ios_backgroundColor="#475569"
+        accessibilityLabel={label}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    padding: tokens.space.md,
-    gap: tokens.space.sm,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  copy: {
+    flex: 1,
+    gap: 4,
   },
 });

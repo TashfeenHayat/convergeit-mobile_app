@@ -4,4 +4,6 @@ export const hrmsDepartmentHeadsKeys = {
   all: ["hrms", "department-heads"] as const,
   list: (params?: Params) => [...hrmsDepartmentHeadsKeys.all, "list", params] as const,
   attendance: (params?: Params) => [...hrmsDepartmentHeadsKeys.all, "attendance", params] as const,
-};
+  reviewerAttendance: (params?: Params) =>
+    [...hrmsDepartmentHeadsKeys.all, "reviewer-attendance", params] as const,
+}

@@ -54,7 +54,15 @@ export function DashboardGlassHeader({ navigation, options }: DashboardGlassHead
 
   return (
     <>
-      <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
+      <View
+        style={[
+          styles.wrap,
+          {
+            paddingTop: insets.top + theme.spacing.screen,
+            paddingHorizontal: theme.spacing.screen,
+          },
+        ]}
+      >
         <View style={styles.row}>
           <LiquidGlass
             intensity="strong"
@@ -140,7 +148,6 @@ export function DashboardGlassHeader({ navigation, options }: DashboardGlassHead
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: 'transparent',
-    paddingHorizontal: 14,
     gap: 10,
     paddingBottom: 4,
   },

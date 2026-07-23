@@ -1,10 +1,5 @@
-import { ModulePlaceholderScreen } from '@/features/dashboard';
+import { ChatWidgetScriptInstallPage } from '@/features/chat-widget/pages/ChatWidgetScriptInstallPage';
 
 export default function Screen() {
-  return (
-    <ModulePlaceholderScreen
-      title="Script"
-      webPath="/dashboard/chat-widget/add/chat/script"
-    />
-  );
+  return <ChatWidgetScriptInstallPage />;
 }

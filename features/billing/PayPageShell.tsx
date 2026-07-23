@@ -29,8 +29,7 @@ export function PayPageShell({ children, title }: PayPageShellProps) {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+       showsVerticalScrollIndicator={false}>
         {children}
       </ScrollView>
     </SafeAreaView>

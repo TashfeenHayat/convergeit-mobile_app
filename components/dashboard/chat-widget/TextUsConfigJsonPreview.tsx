@@ -1,32 +1,90 @@
-import type { ReactNode } from "react";
-/**
- * React Native port shell — source: converge_saas_frontend/components/dashboard/chat-widget/TextUsConfigJsonPreview.tsx
- * Public exports preserved so the mobile tree mirrors web 1:1.
- * Replace shell UI with full RN layout as the feature is productized.
- */
-import { View, StyleSheet } from "react-native";
-import { Typography } from "@/components/ui";
-import { tokens } from "@/theme/tokens";
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import { Typography } from '@/components/ui';
+import {
+  textUsSavedConfigPreview,
+} from '@/lib/chat-widget/text-us-form-defaults';
+import type { TextUsThemePreviewInput } from '@/lib/chat-widget/text-us-design-json';
+import type { TextUsFormFieldDraft } from '@/lib/chat-widget/widgetDraft';
+import { useAppTheme } from '@/theme';
 
 export type TextUsConfigJsonPreviewProps = {
-  children?: ReactNode;
-  title?: string;
-  [key: string]: unknown;
+  theme: TextUsThemePreviewInput;
+  fields: TextUsFormFieldDraft[];
 };
 
-export function TextUsConfigJsonPreview(props: TextUsConfigJsonPreviewProps) {
-  const label = props.title ?? "TextUsConfigJsonPreview";
+export function TextUsConfigJsonPreview({
+  theme: themeInput,
+  fields,
+}: TextUsConfigJsonPreviewProps) {
+  const theme = useAppTheme();
+  const json = useMemo(
+    () =>
+      JSON.stringify(
+        textUsSavedConfigPreview({ theme: themeInput, fields }),
+        null,
+        2,
+      ),
+    [themeInput, fields],
+  );
+
   return (
-    <View style={styles.shell} accessibilityLabel={label}>
-      <Typography variant="medium">{label}</Typography>
-      {props.children}
+    <View
+      style={[
+        styles.wrap,
+        {
+          borderColor: theme.app.dashboard.cardBorder,
+          backgroundColor: 'rgba(0,0,0,0.22)',
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: theme.app.dashboard.cardBorder },
+        ]}
+      >
+        <Typography variant="small" muted style={{ fontWeight: '600' }}>
+          Saved config preview (readable JSON)
+        </Typography>
+      </View>
+      <ScrollView
+        style={styles.body}
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+      >
+        <Typography
+          variant="small"
+          muted
+          style={styles.mono}
+        >
+          {json}
+        </Typography>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    padding: tokens.space.md,
-    gap: tokens.space.sm,
+  wrap: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  header: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  body: {
+    maxHeight: 280,
+    padding: 12,
+  },
+  mono: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    lineHeight: 17,
   },
 });

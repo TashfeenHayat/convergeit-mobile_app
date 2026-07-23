@@ -98,7 +98,7 @@ export function ChatTranscriptsTableToolbar({
         isSuggestionsLoading={isSuggestionsLoading}
         placeholder={SEARCH_PLACEHOLDER[searchKind]}
         onEnter={onSearch}
-      />
+ />
       <View style={styles.actionsRow}>
         <Button variant="primary" size="compact" onPress={onSearch}>
           Search
@@ -111,7 +111,7 @@ export function ChatTranscriptsTableToolbar({
       <Modal visible={filterOpen} transparent animationType="slide" onRequestClose={() => setFilterOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setFilterOpen(false)}>
           <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-            <ScrollView keyboardShouldPersistTaps="handled">
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <Typography variant="mediumLarge" style={{ fontWeight: "700", marginBottom: tokens.space.sm }}>
                 Transcript filters
               </Typography>
@@ -128,7 +128,7 @@ export function ChatTranscriptsTableToolbar({
                   hasActiveFilters={scopeActive}
                   onClose={() => setFilterOpen(false)}
                   title="Scope filters"
-                />
+ />
               ) : null}
               <InputField
                 label="Date from (YYYY-MM-DD)"
@@ -136,14 +136,14 @@ export function ChatTranscriptsTableToolbar({
                 onChangeText={(v) => onScopePatch({ dateFrom: v })}
                 placeholder="2026-01-01"
                 autoCapitalize="none"
-              />
+ />
               <InputField
                 label="Date to (YYYY-MM-DD)"
                 value={scopeFilters.dateTo}
                 onChangeText={(v) => onScopePatch({ dateTo: v })}
                 placeholder="2026-01-31"
                 autoCapitalize="none"
-              />
+ />
               <View style={styles.modalFooter}>
                 <Button
                   variant="secondary"

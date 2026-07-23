@@ -47,19 +47,19 @@ export function InternalSupervisorsWorkspace() {
         <PermissionDeniedPanel
           title="Internal supervisors not available"
           description="Requires page:chat-internal-supervisors or page:chat-widget with chat-widget:view."
-        />
+ />
       </View>
     );
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="Internal Supervisors"
           subtitle="Internal supervisors only (external users use involvement). Assign internal users to monitor internal pools."
           navPreset="configure"
-        />
+ />
 
         <ChatScopeTableFiltersCard
           hasActiveFilters={hasActiveTableFilters}
@@ -77,7 +77,7 @@ export function InternalSupervisorsWorkspace() {
             hasActiveFilters={hasActiveTableFilters}
             onClearAll={scopeFilters.resetFilters}
             onClose={() => setFiltersExpanded(false)}
-          />
+ />
         </ChatScopeTableFiltersCard>
 
         <InternalSupervisorsTab
@@ -85,7 +85,7 @@ export function InternalSupervisorsWorkspace() {
           canFilterByResellerId={scopeFilters.canFilterByResellerId}
           canEdit={hasOperational(OP.chatWidget.update)}
           apiEnabled={gates.widgetSettings}
-        />
+ />
       </ChatLivePageShell>
     </ScrollView>
   );

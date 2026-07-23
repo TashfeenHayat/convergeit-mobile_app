@@ -1,5 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { assignDepartmentHead, listDepartmentHeads, listDepartmentHeadsAttendance, removeDepartmentHead } from "@/api/hrms";
+import {
+  assignDepartmentHead,
+  listDepartmentHeads,
+  listDepartmentHeadsAttendance,
+  listDepartmentHeadsReviewerAttendance,
+  removeDepartmentHead,
+} from "@/api/hrms";
 import type { JsonRecord } from "@/api/types/common.types";
 import { hrmsDepartmentHeadsKeys } from "./keys";
 
@@ -49,6 +55,22 @@ export function useDepartmentHeadsAttendanceQuery(
   return useQuery({
     queryKey: [...hrmsDepartmentHeadsKeys.attendance(req), scope] as const,
     queryFn: () => listDepartmentHeadsAttendance(req),
+    enabled: enabled && params != null,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** GET /hrms/department-heads/reviewer-attendance?page=&limit=&date= */
+export function useDepartmentHeadsReviewerAttendanceQuery(
+  params: HrmsDepartmentHeadsAttendanceParams | undefined,
+  options?: { enabled?: boolean; scope?: string },
+) {
+  const enabled = options?.enabled ?? true;
+  const scope = options?.scope ?? "default";
+  const req = params as unknown as JsonRecord | undefined;
+  return useQuery({
+    queryKey: [...hrmsDepartmentHeadsKeys.reviewerAttendance(req), scope] as const,
+    queryFn: () => listDepartmentHeadsReviewerAttendance(req),
     enabled: enabled && params != null,
     placeholderData: keepPreviousData,
   });

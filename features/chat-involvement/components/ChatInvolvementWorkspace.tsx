@@ -51,13 +51,13 @@ export function ChatInvolvementWorkspace() {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="Chat Involvement"
           subtitle="External users who receive monitor links by email — not live chat agents. Scope filters apply to the table only."
           navPreset="configure"
-        />
+ />
 
         <ChatScopeTableFiltersCard hint="Filters this list only — does not affect Add actions" hasActiveFilters={hasActiveTableFilters} expanded={filtersExpanded} onExpandedChange={setFiltersExpanded}>
           <ChatInvolvementScopeFilterPanel
@@ -71,7 +71,7 @@ export function ChatInvolvementWorkspace() {
             hasActiveFilters={hasActiveTableFilters}
             onClearAll={scopeFilters.resetFilters}
             onClose={() => setFiltersExpanded(false)}
-          />
+ />
         </ChatScopeTableFiltersCard>
 
         <View style={styles.tabsRow}>

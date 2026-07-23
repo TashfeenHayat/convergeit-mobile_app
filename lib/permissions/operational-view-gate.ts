@@ -229,6 +229,17 @@ const PREFIX_VIEW_RULES: readonly { prefix: string; anyOf: readonly string[] }[]
   { prefix: "/dashboard/shifts/pool-shift", anyOf: [HRMS.SHIFT_VIEW, OP.hrms.shift.view] },
   { prefix: "/dashboard/shifts", anyOf: [...HRMS_SHIFT_ASSIGNMENT_ANY, OP.hrms.shift.view] },
   {
+    prefix: "/dashboard/text-us",
+    anyOf: [
+      OP.phoneNumberSetup.view,
+      OP.phoneNumberSetup.create,
+      OP.phoneNumberSetup.update,
+      OP.phoneNumberSetup.delete,
+      OP.chatWidget.view,
+      OP.chatWidget.update,
+    ],
+  },
+  {
     prefix: "/dashboard/phone-number-setup",
     anyOf: [
       OP.phoneNumberSetup.view,

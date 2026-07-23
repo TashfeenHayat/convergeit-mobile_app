@@ -88,12 +88,12 @@ export function QaAnnotatedTranscript({
             visitorDisplayName={title}
             agentDisplayName={agentDisplayName(agent as Parameters<typeof agentDisplayName>[0])}
             profileCaptureEnabled={false}
-          />
+ />
         </View>
       )}
 
       {canAnnotate ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.annotationStrip}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.annotationStrip} showsVerticalScrollIndicator={false}>
           {messages
             .filter((m) => m.role === "agent" || m.role === "visitor")
             .slice(-12)
@@ -121,7 +121,7 @@ export function QaAnnotatedTranscript({
         onClose={() => setAnnotateMessageId(null)}
         onSave={(body) => onSaveAnnotation(annotateMessageId!, body)}
         saving={saving}
-      />
+ />
     </View>
   );
 }

@@ -1,10 +1,5 @@
-import { ModulePlaceholderScreen } from '@/features/dashboard';
+import { TextUsDesignPage } from '@/features/chat-widget/pages/TextUsDesignPage';
 
 export default function Screen() {
-  return (
-    <ModulePlaceholderScreen
-      title="Text"
-      webPath="/dashboard/chat-widget/add/text"
-    />
-  );
+  return <TextUsDesignPage />;
 }

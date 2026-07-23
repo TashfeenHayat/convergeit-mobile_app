@@ -115,7 +115,7 @@ export function EmailFormsListPage() {
               <TablePagination page={page} pageCount={totalPages} onPageChange={setPage} />
             ) : null
           }
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <ConfirmActionModal
@@ -127,7 +127,7 @@ export function EmailFormsListPage() {
         isLoading={deleteMutation.isPending}
         onConfirm={() => void handleConfirmDelete()}
         onDismiss={() => setDeleteTarget(null)}
-      />
+ />
     </MobileScreen>
   );
 }

@@ -83,7 +83,7 @@ export function AgentInboxScreen() {
           ]}
           value={tab}
           onChange={(v) => setTab(v as InboxTab)}
-        />
+ />
       </View>
 
       {inboxQuery.isLoading && !inboxQuery.data ? (
@@ -91,7 +91,7 @@ export function AgentInboxScreen() {
           <ActivityIndicator color={theme.app.dashboard.accentBlue} />
         </View>
       ) : inboxQuery.isError ? (
-        <AppCard style={{ marginHorizontal: theme.spacing.screen }}>
+        <AppCard>
           <Typography variant="medium" color={theme.app.danger}>
             {extractApiErrorMessage(inboxQuery.error, 'Could not load inbox.')}
           </Typography>
@@ -102,7 +102,7 @@ export function AgentInboxScreen() {
           keyExtractor={(item, index) => conversationIdOf(item) || `row-${index}`}
           contentContainerStyle={[
             styles.list,
-            { paddingHorizontal: theme.spacing.screen, gap: theme.spacing.sm },
+            { gap: theme.spacing.sm },
             items.length === 0 && styles.emptyList,
           ]}
           refreshControl={
@@ -110,7 +110,7 @@ export function AgentInboxScreen() {
               refreshing={inboxQuery.isRefetching && !inboxQuery.isLoading}
               onRefresh={() => void inboxQuery.refetch()}
               tintColor={theme.app.dashboard.accentBlue}
-            />
+          />
           }
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -188,7 +188,7 @@ export function AgentInboxScreen() {
               </Pressable>
             );
           }}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );
@@ -196,7 +196,7 @@ export function AgentInboxScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingTop: 12 },
-  header: { paddingHorizontal: 16, marginBottom: 12 },
+  header: { marginBottom: 12 },
   list: { paddingBottom: 24 },
   emptyList: { flexGrow: 1, justifyContent: 'center' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },

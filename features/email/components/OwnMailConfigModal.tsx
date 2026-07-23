@@ -136,7 +136,7 @@ export function OwnMailConfigModal({
       primaryButtonLabel={saving ? "Saving…" : "Save"}
       primaryButtonDisabled={saving || !canUpdate || (mode === "reseller" && !activeResellerId)}
     >
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }} showsVerticalScrollIndicator={false}>
         {mode === "reseller" && lockedResellerId ? (
           <Typography variant="small" muted>
             Reseller: {resellerLabel?.trim() || lockedResellerId}
@@ -153,7 +153,7 @@ export function OwnMailConfigModal({
                 ? resellerOptions
                 : [{ value: "", label: resellersQuery.isLoading ? "Loading…" : "No resellers" }]
             }
-          />
+ />
         ) : null}
 
         {mode === "reseller" && !activeResellerId ? (
@@ -170,7 +170,7 @@ export function OwnMailConfigModal({
                   value: k,
                   label: k.toUpperCase(),
                 }))}
-              />
+ />
             ) : null}
 
             <SelectField
@@ -185,7 +185,7 @@ export function OwnMailConfigModal({
                   ? form.providersForKind.map((p) => ({ value: p.id, label: p.name || p.code }))
                   : [{ value: "", label: form.providersQuery.isLoading ? "Loading…" : "Select kind first" }]
               }
-            />
+ />
 
             <InputField
               label="From email"
@@ -193,14 +193,14 @@ export function OwnMailConfigModal({
               onChangeText={form.setFromEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-            />
+ />
             <InputField label="From name" value={form.fromName} onChangeText={form.setFromName} />
 
             <Checkbox
               checked={form.isEnabled}
               onChange={(next) => form.setIsEnabled(next)}
               label="Enabled"
-            />
+ />
 
             {schemaFields.map((field) => {
               const key = schemaFieldKey(field);
@@ -213,7 +213,7 @@ export function OwnMailConfigModal({
                   autoCapitalize="none"
                   secureTextEntry={isSecretField(field)}
                   placeholder={secretFieldPlaceholder(field, settings?.fields)}
-                />
+ />
               );
             })}
 
@@ -232,7 +232,7 @@ export function OwnMailConfigModal({
                   autoCapitalize="none"
                   keyboardType="email-address"
                   placeholder="you@company.com"
-                />
+ />
                 <Button
                   variant="outlined"
                   size="compact"

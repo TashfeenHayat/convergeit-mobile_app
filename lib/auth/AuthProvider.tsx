@@ -16,12 +16,23 @@ import {
 import { hydrateTokenCache, getAccessToken } from '@/api/storage/token-storage';
 import { extractApiErrorMessage, extractNestFieldErrors } from '@/lib/api/errors';
 import {
+  extractIsPlatformAdmin,
+  extractPermissionsByType,
+  hasOperationalPermission,
+  hasPagePermission,
+  isRbacActive,
+  PERMISSION_BUCKET_OPERATIONAL,
+  PERMISSION_BUCKET_PAGE,
+  toPermissionSet,
+  type PermissionsByType,
+} from '@/lib/auth/permissions-model';
+import {
   useLoginMutation,
   useLogoutMutation,
   useMeQuery,
 } from '@/lib/hooks';
 
-export type PermissionsByType = Record<string, string[]>;
+export type { PermissionsByType };
 
 type LoginResult =
   | { success: true; data: LoginSuccessData }
@@ -50,6 +61,29 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function pickUserFromAuthPayload(
+  data: LoginSuccessData | Record<string, unknown>,
+): AuthApiUser | null {
+  if ('user' in data && data.user && typeof data.user === 'object') {
+    return data.user as AuthApiUser;
+  }
+  const root = data as Record<string, unknown>;
+  const nested = root.data;
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    const nestedUser = (nested as Record<string, unknown>).user;
+    if (nestedUser && typeof nestedUser === 'object') {
+      return nestedUser as AuthApiUser;
+    }
+  }
+  return null;
+}
+
+/**
+ * Web-parity permission hydrate: use `extractPermissionsByType` so role
+ * `breakdown.fromRole` grants (departments, pools, roles, …) land in PAGE.
+ * The previous shallow `permissionsByType` / `permission.page` read dropped
+ * those and hid Departments / Pools / Roles from the sidebar.
+ */
 function normalizePermissions(
   data: LoginSuccessData | Record<string, unknown>,
 ): {
@@ -57,48 +91,19 @@ function normalizePermissions(
   permissionsByType: PermissionsByType;
   isPlatformAdmin: boolean;
 } {
-  if ('user' in data && data.user && 'accessToken' in data) {
-    const login = data as LoginSuccessData;
-    const byType: PermissionsByType = { ...(login.permissionsByType ?? {}) };
-    if (login.permission?.page?.length) byType.PAGE = login.permission.page;
-    if (login.permission?.operational?.length) {
-      byType.OPERATIONAL = login.permission.operational;
-    }
-    return {
-      user: login.user,
-      permissionsByType: byType,
-      isPlatformAdmin: Boolean(login.permission?.isPlatformAdmin),
-    };
-  }
-
-  const me = data as {
-    data?: {
-      user?: AuthApiUser;
-      permissionsByType?: PermissionsByType;
-      permission?: { isPlatformAdmin?: boolean };
-      isPlatformAdmin?: boolean;
-    };
-    user?: AuthApiUser;
-    permissionsByType?: PermissionsByType;
+  return {
+    user: pickUserFromAuthPayload(data),
+    permissionsByType: extractPermissionsByType(data) ?? {},
+    isPlatformAdmin: extractIsPlatformAdmin(data),
   };
-  const payload = (me.data ?? me) as {
-    user?: AuthApiUser;
-    permissionsByType?: PermissionsByType;
-    permission?: { isPlatformAdmin?: boolean };
-    isPlatformAdmin?: boolean;
-  };
-  const user = payload.user ?? me.user ?? null;
-  const permissionsByType = payload.permissionsByType ?? me.permissionsByType ?? {};
-  const isPlatformAdmin = Boolean(
-    payload.isPlatformAdmin ?? payload.permission?.isPlatformAdmin,
-  );
-  return { user, permissionsByType, isPlatformAdmin };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [user, setUser] = useState<AuthApiUser | null>(null);
-  const [permissionsByType, setPermissionsByType] = useState<PermissionsByType>({});
+  const [permissionsByType, setPermissionsByType] = useState<PermissionsByType>(
+    {},
+  );
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   const loginMutation = useLoginMutation();
@@ -171,15 +176,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (__DEV__) {
           console.error('[AUTH] login failed:', error, fields);
         }
-        const fieldErrors: NonNullable<Extract<LoginResult, { success: false }>['fieldErrors']> =
-          {};
+        const fieldErrors: NonNullable<
+          Extract<LoginResult, { success: false }>['fieldErrors']
+        > = {};
         if (fields.email) fieldErrors.email = fields.email;
         if (fields.password) fieldErrors.password = fields.password;
         if (fields.licenseKey) fieldErrors.licenseKey = fields.licenseKey;
         return {
           success: false,
           error,
-          fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
+          fieldErrors:
+            Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
         };
       }
     },
@@ -194,33 +201,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [applySession, logoutMutation]);
 
+  const pagePermissionSet = useMemo(
+    () =>
+      toPermissionSet(
+        permissionsByType[PERMISSION_BUCKET_PAGE] ?? permissionsByType.page,
+      ),
+    [permissionsByType],
+  );
+  const operationalPermissionSet = useMemo(
+    () =>
+      toPermissionSet(
+        permissionsByType[PERMISSION_BUCKET_OPERATIONAL] ??
+          permissionsByType.operational,
+      ),
+    [permissionsByType],
+  );
+
   const hasPage = useCallback(
     (code: string) => {
       if (isPlatformAdmin) return true;
-      const pages = permissionsByType.PAGE ?? permissionsByType.page ?? [];
-      if (pages.length === 0) return true;
-      return pages.includes(code);
+      if (pagePermissionSet.size === 0) return true;
+      return hasPagePermission(pagePermissionSet, code);
     },
-    [isPlatformAdmin, permissionsByType],
+    [isPlatformAdmin, pagePermissionSet],
   );
 
   const hasOperational = useCallback(
     (code: string) => {
       if (isPlatformAdmin) return true;
-      const ops = permissionsByType.OPERATIONAL ?? permissionsByType.operational ?? [];
-      if (ops.length === 0) return true;
-      return ops.includes(code);
+      if (operationalPermissionSet.size === 0) return true;
+      return hasOperationalPermission(operationalPermissionSet, code);
     },
-    [isPlatformAdmin, permissionsByType],
+    [isPlatformAdmin, operationalPermissionSet],
   );
 
-  const pagePermissions = permissionsByType.PAGE ?? permissionsByType.page ?? [];
-  const operationalPermissions =
-    permissionsByType.OPERATIONAL ?? permissionsByType.operational ?? [];
-  const rbacEnabled = pagePermissions.length > 0 || operationalPermissions.length > 0;
-  const permissionsSyncing = Boolean(getAccessToken()) && meQuery.isFetching && !user;
+  const pagePermissions = [...pagePermissionSet];
+  const operationalPermissions = [...operationalPermissionSet];
+  const rbacEnabled = isRbacActive(permissionsByType);
+  const permissionsSyncing =
+    Boolean(getAccessToken()) && meQuery.isFetching && !user;
 
-  const isLoading = !hydrated || (Boolean(getAccessToken()) && meQuery.isLoading && !user);
+  const isLoading =
+    !hydrated || (Boolean(getAccessToken()) && meQuery.isLoading && !user);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -259,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error('useAuth must be used within AuthProvider');

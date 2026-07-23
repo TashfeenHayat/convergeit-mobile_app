@@ -63,7 +63,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
           <Field
             label="Period"
             value={`${invoice.periodStart?.slice(0, 10) ?? "—"} → ${invoice.periodEnd?.slice(0, 10) ?? "—"}`}
-          />
+ />
           <Field label="Issued" value={invoice.issuedDate?.slice(0, 10) ?? "—"} />
           <Field label="Due" value={invoice.dueDate?.slice(0, 10) ?? "—"} />
           <Field label="Total" value={money(invoice.totalAmount, invoice.currency)} />
@@ -89,7 +89,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
                 </Typography>
               </View>
             )}
-          />
+  showsVerticalScrollIndicator={false}/>
         </AppCard>
 
         {invoice.status !== "paid" ? (

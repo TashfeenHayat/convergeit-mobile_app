@@ -113,7 +113,7 @@ export function SocialMediaListPage() {
               ) : null}
             </AppCard>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );

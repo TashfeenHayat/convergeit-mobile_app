@@ -93,7 +93,7 @@ export function ChatQaWorkspace({ initialConversationId = null }: { initialConve
         <PermissionDeniedPanel
           title="QA inbox not available"
           description="Requires page:chat-qa and qa:chat:review (or related QA codes) from /auth/me."
-        />
+ />
       </View>
     );
   }
@@ -115,7 +115,7 @@ export function ChatQaWorkspace({ initialConversationId = null }: { initialConve
           title="QA Inbox"
           subtitle="Closed chats land in your queue. Read the transcript, score the session, then submit the QA report."
           navPreset="triage"
-        />
+ />
 
         <View style={chatQaStyles.statsRow}>
           <Typography variant="small" style={chatQaStyles.statPill}>
@@ -141,7 +141,7 @@ export function ChatQaWorkspace({ initialConversationId = null }: { initialConve
             childCompanyOptions={scopeFilters.childCompanyOptions}
             websiteOptions={scopeFilters.websiteOptions}
             hint="Filter reviews by organization and website."
-          />
+ />
         </View>
 
         {qa.queueError ? (
@@ -166,9 +166,9 @@ export function ChatQaWorkspace({ initialConversationId = null }: { initialConve
             filters={qa.filters}
             onFiltersChange={qa.setFilters}
             statusCounts={qa.statusCounts}
-          />
+ />
         ) : (
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
             <Pressable onPress={clearSelection} style={styles.backRow}>
               <Typography variant="medium">← Back to queue</Typography>
             </Pressable>
@@ -181,7 +181,7 @@ export function ChatQaWorkspace({ initialConversationId = null }: { initialConve
               annotationsByMessageId={qa.annotationsByMessageId}
               onSaveAnnotation={qa.saveMessageAnnotation}
               saving={qa.bundleLoading}
-            />
+ />
             <QaSessionReviewPanel
               bundle={qa.bundle}
               canEdit={canReviewQaSession(hasOperational)}
@@ -192,7 +192,7 @@ export function ChatQaWorkspace({ initialConversationId = null }: { initialConve
               onClaim={qa.claimReview}
               onAssignTo={qa.assignReviewTo}
               saving={qa.bundleLoading}
-            />
+ />
             <QaSessionContextPanel bundle={qa.bundle} />
           </ScrollView>
         )}

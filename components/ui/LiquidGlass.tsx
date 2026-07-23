@@ -70,13 +70,22 @@ export function LiquidGlass({
   elevated = false,
   tint: tintProp,
 }: LiquidGlassProps) {
-  const { paletteMode } = useAppTheme();
+  const theme = useAppTheme();
+  const { paletteMode, app } = theme;
   const preset = INTENSITY[intensity];
   const isLight = (tintProp ?? (paletteMode === 'light' ? 'light' : 'dark')) === 'light';
   const tint = tintProp ?? (isLight ? 'light' : 'dark');
   const fill = isLight ? preset.fillLight : preset.fillDark;
-  const shellBg = isLight ? preset.shellLight : preset.shellDark;
-  const borderColor = isLight ? preset.borderLight : preset.borderDark;
+  /** Theme surface — Discord glass when dark; colored headerBg for nitro presets. */
+  const themedShellDark =
+    app.dashboard.headerBg && app.dashboard.headerBg !== '#1e1f22'
+      ? app.dashboard.headerBg
+      : 'rgba(8, 12, 22, 0.82)';
+  const themedShellLight = app.dashboard.headerBg || preset.shellLight;
+  const shellBg = isLight ? themedShellLight : themedShellDark;
+  const borderColor = border
+    ? app.dashboard.cardBorder || (isLight ? preset.borderLight : preset.borderDark)
+    : 'transparent';
   /** iOS blur is reliable; Android Expo Go often paints black with BlurView — use solid glass instead. */
   const useBlur = Platform.OS === 'ios';
   const shellFills = wantsFlexFill(style);
@@ -99,14 +108,22 @@ export function LiquidGlass({
         {useBlur ? (
           <BlurView intensity={preset.blur} tint={tint} style={StyleSheet.absoluteFillObject} />
         ) : null}
-        <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { backgroundColor: fill }]} />
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              backgroundColor: isLight ? fill : 'rgba(0,0,0,0.22)',
+            },
+          ]}
+        />
         {sheen ? (
           <LinearGradient
             pointerEvents="none"
             colors={
               isLight
                 ? ['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.12)', 'transparent']
-                : ['rgba(255,255,255,0.22)', 'rgba(255,255,255,0.05)', 'transparent']
+                : ['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)', 'transparent']
             }
             locations={[0, 0.35, 1]}
             start={{ x: 0, y: 0 }}

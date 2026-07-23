@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -6,181 +7,290 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
 
 import { MobileScreen } from '@/components/layout';
+import { DashboardPageIntro } from '@/components/layout/DashboardPageIntro';
 import {
   AppCard,
-  DataTable,
+  Button,
   ListTableCard,
-  StatusChip,
+  SelectField,
   Typography,
-  type DataTableColumn,
 } from '@/components/ui';
-import { getLeaveQuotaSummary } from '@/api/hrms/leave-applications.api';
 import { extractApiErrorMessage } from '@/lib/api/errors';
-import { parseLeaveQuotaSummaryRows } from '@/lib/utils/hrms/leave-quota-display';
+import { useLeaveQuotaSummaryQuery } from '@/lib/hooks/query/hrms';
+import {
+  formatLeaveDayCount,
+  parseLeaveQuotaSummaryRows,
+} from '@/lib/utils/hrms/leave-quota-display';
 import { useAppTheme } from '@/theme';
-import { tokens } from '@/theme/tokens';
 
-type QuotaRow = {
-  id: string;
-  name: string;
-  yearlyMax: string;
-  approvedDays: string;
-  pendingDays: string;
-  remainingDays: string;
-  usagePct: number;
-};
+function buildYearOptions(centerYear: number) {
+  const years: number[] = [];
+  for (let y = centerYear - 2; y <= centerYear + 1; y += 1) {
+    years.push(y);
+  }
+  return years.map((y) => ({ value: String(y), label: String(y) }));
+}
 
+/**
+ * Leave Balance — quota summary for selected year.
+ * Network: GET /hrms/leave-applications/quota-summary?year=
+ */
 export function LeaveBalanceScreen() {
   const theme = useAppTheme();
-  const year = new Date().getFullYear();
+  const accent = theme.app.dashboard.accentBlue;
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
 
-  const query = useQuery({
-    queryKey: ['hrms', 'leave-quota', year],
-    queryFn: () => getLeaveQuotaSummary({ year }),
-    staleTime: 5 * 60_000,
-  });
+  /** GET /hrms/leave-applications/quota-summary?year=… */
+  const query = useLeaveQuotaSummaryQuery(
+    { year },
+    { enabled: true, scope: 'leave-balance' },
+  );
 
-  const rows = useMemo((): QuotaRow[] => {
-    return parseLeaveQuotaSummaryRows(query.data).map((item) => ({
-      id: item.id,
-      name: item.name,
-      yearlyMax: item.yearlyMax == null ? '—' : String(item.yearlyMax),
-      approvedDays: String(item.approvedDays),
-      pendingDays: String(item.pendingDays),
-      remainingDays: item.remainingDays == null ? '—' : String(item.remainingDays),
-      usagePct: item.usagePct,
-    }));
-  }, [query.data]);
+  const rows = useMemo(
+    () => parseLeaveQuotaSummaryRows(query.data),
+    [query.data],
+  );
 
-  const columns: DataTableColumn<QuotaRow>[] = useMemo(
-    () => [
-      { id: 'name', label: 'Leave type', minWidth: 140 },
-      { id: 'yearlyMax', label: 'Max', minWidth: 70, align: 'center', cellVariant: 'muted' },
-      { id: 'approvedDays', label: 'Approved', minWidth: 90, align: 'center' },
-      {
-        id: 'pendingDays',
-        label: 'Pending',
-        minWidth: 90,
-        align: 'center',
-        render: (value) => {
-          const n = Number(value);
-          return (
-            <StatusChip
-              label={String(value ?? '0')}
-              tone={n > 0 ? 'warning' : 'neutral'}
-            />
-          );
-        },
-      },
-      {
-        id: 'remainingDays',
-        label: 'Remaining',
-        minWidth: 100,
-        align: 'center',
-        render: (value) => (
-          <Typography variant="medium16" color={tokens.colors.accentGreen} style={{ fontWeight: '700' }}>
-            {String(value ?? '—')}
-          </Typography>
-        ),
-      },
-      {
-        id: 'usagePct',
-        label: 'Usage',
-        minWidth: 120,
-        render: (_value, row) => (
-          <View style={styles.usageCell}>
-            <View style={[styles.track, { backgroundColor: theme.app.dashboard.surfaceElevated }]}>
-              <View
-                style={[
-                  styles.fill,
-                  {
-                    width: `${Math.min(100, Math.max(0, row.usagePct))}%`,
-                    backgroundColor: theme.app.dashboard.accentBlue,
-                  },
-                ]}
-              />
-            </View>
-            <Typography variant="small" muted>
-              {Math.round(row.usagePct)}%
-            </Typography>
-          </View>
-        ),
-      },
-    ],
-    [theme.app.dashboard.accentBlue, theme.app.dashboard.surfaceElevated],
+  const yearOptions = useMemo(
+    () => buildYearOptions(currentYear),
+    [currentYear],
   );
 
   return (
     <MobileScreen scroll={false} contentStyle={styles.screen}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingHorizontal: theme.spacing.screen }]}
+        contentContainerStyle={[styles.scroll, { gap: theme.spacing.md }]}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={query.isRefetching && !query.isLoading}
             onRefresh={() => void query.refetch()}
-            tintColor={theme.app.dashboard.accentBlue}
+            tintColor={accent}
           />
-        }
-      >
-        <View style={{ gap: theme.spacing.md }}>
-          <View style={{ gap: theme.spacing.xs }}>
-            <Typography variant="boldLarge">Leave Balance</Typography>
-            <Typography variant="medium" muted>
-              Quota summary for {year}.
-            </Typography>
-          </View>
+        } showsVerticalScrollIndicator={false}>
+        <DashboardPageIntro subtitle="View approved leave counts and remaining quota for the selected year." />
 
-          {query.isError ? (
-            <AppCard>
-              <Typography variant="medium" color={theme.app.danger}>
-                {extractApiErrorMessage(query.error, 'Could not load leave balance.')}
-              </Typography>
-            </AppCard>
-          ) : (
-            <ListTableCard
-              title="Leave quotas"
-              subtitle={`${rows.length} leave type${rows.length === 1 ? '' : 's'} · ${year}`}
-              icon="wallet-outline"
-              footer={
-                <Typography variant="small" muted>
-                  {rows.length === 0 ? 'No quota data' : `${rows.length} types configured`}
-                </Typography>
-              }
-            >
-              {query.isLoading && !query.data ? (
-                <View style={styles.centered}>
-                  <ActivityIndicator color={theme.app.dashboard.accentBlue} />
-                </View>
-              ) : (
-                <DataTable
-                  columns={columns}
-                  rows={rows}
-                  getRowId={(row) => row.id}
-                  minWidth={620}
-                  size="medium"
-                  emptyState={{
-                    title: 'No leave quota data',
-                    description: 'No leave types are configured for this year yet.',
-                    icon: 'wallet-outline',
-                  }}
-                />
+        {query.isError ? (
+          <AppCard style={{ gap: 10 }}>
+            <Typography variant="medium" color={theme.app.danger}>
+              {extractApiErrorMessage(
+                query.error,
+                'Could not load leave balance.',
               )}
-            </ListTableCard>
-          )}
-        </View>
+            </Typography>
+            <Button
+              size="compact"
+              variant="outlined"
+              onPress={() => void query.refetch()}
+            >
+              Retry
+            </Button>
+          </AppCard>
+        ) : (
+          <ListTableCard
+            title="Quota summary"
+            subtitle="Approved leave days counted against your yearly limits."
+            icon="calendar-outline"
+            toolbar={
+              <View style={styles.yearField}>
+                <SelectField
+                  label="Year"
+                  value={String(year)}
+                  onChange={(v) => {
+                    const n = Number(v);
+                    if (Number.isFinite(n)) setYear(n);
+                  }}
+                  options={yearOptions}
+ />
+              </View>
+            }
+          >
+            {query.isLoading && !query.data ? (
+              <View style={styles.centered}>
+                <ActivityIndicator color={accent} />
+                <Typography variant="small" muted>
+                  Loading…
+                </Typography>
+              </View>
+            ) : rows.length === 0 ? (
+              <View style={styles.empty}>
+                <View
+                  style={[
+                    styles.emptyIcon,
+                    {
+                      backgroundColor: `${accent}22`,
+                      borderColor: theme.app.dashboard.cardBorder,
+                    },
+                  ]}
+                >
+                  <Ionicons name="calendar-outline" size={28} color={accent} />
+                </View>
+                <Typography variant="medium" style={{ fontWeight: '700' }}>
+                  No quota data
+                </Typography>
+                <Typography variant="small" muted style={{ textAlign: 'center' }}>
+                  No leave types are configured for {year} yet.
+                </Typography>
+              </View>
+            ) : (
+              <View style={{ gap: 14 }}>
+                {rows.map((row) => {
+                  const usedLabel = formatLeaveDayCount(row.approvedDays);
+                  const maxLabel =
+                    row.yearlyMax == null
+                      ? '—'
+                      : formatLeaveDayCount(row.yearlyMax);
+                  return (
+                    <View
+                      key={row.id}
+                      style={[
+                        styles.quotaBlock,
+                        {
+                          borderColor: theme.app.dashboard.cardBorder,
+                          backgroundColor: theme.app.dashboard.overlayLight,
+                        },
+                      ]}
+                    >
+                      <View style={styles.quotaHeader}>
+                        <Typography
+                          variant="medium16"
+                          style={{ fontWeight: '700', flex: 1 }}
+                          numberOfLines={2}
+                        >
+                          {row.name}
+                        </Typography>
+                        <Typography variant="small" muted>
+                          {usedLabel} / {maxLabel}
+                        </Typography>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.track,
+                          {
+                            backgroundColor:
+                              theme.app.dashboard.surfaceElevated,
+                          },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.fill,
+                            {
+                              width: `${Math.min(100, Math.max(0, row.usagePct))}%`,
+                              backgroundColor: accent,
+                            },
+                          ]}
+ />
+                      </View>
+
+                      <View style={styles.statsGrid}>
+                        <StatCell
+                          label="Approved leaves"
+                          value={formatLeaveDayCount(row.approvedDays)}
+ />
+                        <StatCell
+                          label="Pending"
+                          value={formatLeaveDayCount(row.pendingDays)}
+ />
+                        <StatCell
+                          label="Remaining"
+                          value={
+                            row.remainingDays == null
+                              ? '—'
+                              : formatLeaveDayCount(row.remainingDays)
+                          }
+ />
+                        <StatCell
+                          label="Yearly limit"
+                          value={
+                            row.yearlyMax == null
+                              ? '—'
+                              : formatLeaveDayCount(row.yearlyMax)
+                          }
+ />
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </ListTableCard>
+        )}
       </ScrollView>
     </MobileScreen>
   );
 }
 
+function StatCell({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.statCell}>
+      <Typography variant="small" muted>
+        {label}
+      </Typography>
+      <Typography variant="medium" style={{ fontWeight: '600' }}>
+        {value}
+      </Typography>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingTop: 12 },
+  screen: { flex: 1, paddingTop: 12, paddingHorizontal: 8 },
   scroll: { paddingBottom: 32 },
-  centered: { minHeight: 120, alignItems: 'center', justifyContent: 'center' },
-  usageCell: { gap: 4, width: 100 },
-  track: { height: 6, borderRadius: 999, overflow: 'hidden', width: '100%' },
+  yearField: { minWidth: 110, maxWidth: 140 },
+  centered: {
+    minHeight: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  empty: {
+    minHeight: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  quotaBlock: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    gap: 12,
+  },
+  quotaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  track: {
+    height: 6,
+    borderRadius: 999,
+    overflow: 'hidden',
+    width: '100%',
+  },
   fill: { height: '100%', borderRadius: 999 },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  statCell: {
+    width: '47%',
+    flexGrow: 1,
+    gap: 2,
+  },
 });

@@ -161,7 +161,11 @@ export const spacing = {
   lg: 16,
   xl: 24,
   xxl: 32,
-  screen: 16,
+  /**
+   * Page horizontal gutter (left + right) for all dashboard / MobileScreen pages.
+   * Change only here — MobileScreen applies it as the single source of truth.
+   */
+  screen: 8,
   screenLg: 20,
 } as const;
 

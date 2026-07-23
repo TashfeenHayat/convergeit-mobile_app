@@ -161,7 +161,7 @@ export function AddDepartmentModal({
       primaryButtonLabel={isEdit ? "Save" : "Create"}
       primaryButtonDisabled={saving || (isEdit && detailQuery.isLoading)}
     >
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }} showsVerticalScrollIndicator={false}>
         {mayPickInternal ? (
           <SegmentedControl
             value={departmentType}
@@ -170,7 +170,7 @@ export function AddDepartmentModal({
               { value: "Internal", label: "Internal" },
               { value: "External", label: "External" },
             ]}
-          />
+ />
         ) : null}
 
         <InputField label="Department name" value={name} onChangeText={setName} />
@@ -187,7 +187,7 @@ export function AddDepartmentModal({
                     ? resellerOptions
                     : [{ value: "", label: resellersQuery.isLoading ? "Loading…" : "No resellers" }]
                 }
-              />
+ />
             ) : null}
             <SelectField
               label="Parent company"
@@ -198,7 +198,7 @@ export function AddDepartmentModal({
                   ? parentOptions
                   : [{ value: "", label: companiesQuery.isLoading ? "Loading…" : "Select reseller first" }]
               }
-            />
+ />
           </>
         ) : null}
 

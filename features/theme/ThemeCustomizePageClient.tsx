@@ -79,8 +79,7 @@ export function ThemeCustomizePageClient() {
     <MobileScreen scroll={false}>
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingHorizontal: theme.spacing.screen }]}
-        keyboardShouldPersistTaps="handled"
-      >
+        keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={{ gap: theme.spacing.md }}>
           <View>
             <Typography variant="boldLarge">Customize appearance</Typography>
@@ -134,7 +133,7 @@ export function ThemeCustomizePageClient() {
                       previewBar={colors.previewBar}
                       previewTab={colors.previewTab}
                       onPress={() => setPresetId(p.id)}
-                    />
+ />
                   );
                 })}
               </View>
@@ -178,7 +177,7 @@ export function ThemeCustomizePageClient() {
                     previewBar={colors.previewBar}
                     previewTab={colors.previewTab}
                     onPress={() => setPresetId(p.id)}
-                  />
+ />
                 );
               })}
             </View>
@@ -196,7 +195,7 @@ export function ThemeCustomizePageClient() {
                 onBlur={applyHexDraft}
                 placeholder="#ec4899"
                 autoCapitalize="none"
-              />
+ />
               <InputField
                 label="End color"
                 value={endHexDraft}
@@ -204,7 +203,7 @@ export function ThemeCustomizePageClient() {
                 onBlur={applyEndHexDraft}
                 placeholder="#831843"
                 autoCapitalize="none"
-              />
+ />
               <Button
                 variant="outlined"
                 onPress={() => {

@@ -1,5 +1,5 @@
-import { UserShiftAssignmentsPage } from '@/features/hrms/pages/ShiftAssignmentsPages';
+import { UserShiftRosterPage } from '@/features/hrms/pages/UserShiftRosterPage';
 
-export default function Screen() {
-  return <UserShiftAssignmentsPage />;
+export default function UserShiftRoute() {
+  return <UserShiftRosterPage />;
 }

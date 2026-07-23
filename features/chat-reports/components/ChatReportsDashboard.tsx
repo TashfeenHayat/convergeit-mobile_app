@@ -62,7 +62,7 @@ export function ChatReportsDashboard() {
         <PermissionDeniedPanel
           title="Chat reports not available"
           description="Requires page:chat-reports and chat:report:view from /auth/me."
-        />
+ />
       </View>
     );
   }
@@ -81,13 +81,13 @@ export function ChatReportsDashboard() {
   const qa = reports.overview?.qa;
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="Live Chat Reports"
           subtitle="Scoped metrics from closed and active conversations in your monitor access."
           navPreset="configure"
-        />
+ />
         <View style={styles.toolbar}>
           <Button variant="secondary" size="compact" onPress={() => void reports.refresh()}>
             Refresh
@@ -115,7 +115,7 @@ export function ChatReportsDashboard() {
             showDepartment
             departmentOptions={[{ value: "", label: "All departments" }]}
             hint="Pick org scope; set report period using date from/to fields below."
-          />
+ />
           <Typography variant="small" muted style={{ marginTop: tokens.space.sm }}>
             Date from: {scopeFilters.filters.dateFrom || "—"} · Date to: {scopeFilters.filters.dateTo || "—"}
           </Typography>
@@ -162,7 +162,7 @@ export function ChatReportsDashboard() {
                   conversationCount: b.conversationCount,
                   avgQaScore: b.avgQaScore,
                 }))}
-              />
+ />
               <ReportBucketTable
                 title="By routing key"
                 rows={(reports.overview.byRoutingKey ?? []).slice(0, 12).map((b) => ({
@@ -170,7 +170,7 @@ export function ChatReportsDashboard() {
                   conversationCount: b.conversationCount,
                   avgQaScore: b.avgQaScore,
                 }))}
-              />
+ />
             </View>
           </>
         ) : null}

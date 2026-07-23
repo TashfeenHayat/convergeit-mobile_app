@@ -255,7 +255,7 @@ export function CreateInvoicePageClient() {
 
   return (
     <MobileScreen>
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: theme.spacing.screen }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: theme.spacing.screen }]} showsVerticalScrollIndicator={false}>
         <View style={{ gap: theme.spacing.md }}>
           <Typography variant="boldLarge">Per-website invoice</Typography>
           <Typography variant="medium" muted>
@@ -286,7 +286,7 @@ export function CreateInvoicePageClient() {
                     status={selectedProfile.status}
                     trialEndDate={selectedProfile.trialEndDate}
                     graceEndDate={null}
-                  />
+ />
                 </View>
                 <Typography variant="small" muted>
                   Parent company: {selectedProfile.parentCompanyName} · Child company:{" "}
@@ -310,7 +310,7 @@ export function CreateInvoicePageClient() {
               showInvoiceEmails
               invoiceEmails={invoiceEmails}
               onInvoiceEmailsChange={setInvoiceEmails}
-            />
+ />
 
             <Button
               variant="outlined"
@@ -361,7 +361,7 @@ export function CreateInvoicePageClient() {
               value={extraCharges}
               onChangeText={setExtraCharges}
               keyboardType="decimal-pad"
-            />
+ />
             <SelectField
               label="Issue immediately"
               value={issueNow}
@@ -370,13 +370,13 @@ export function CreateInvoicePageClient() {
                 { value: "yes", label: "Yes — notify client" },
                 { value: "no", label: "No — save as draft" },
               ]}
-            />
+ />
             <InputField
               label="Notes"
               value={notes}
               onChangeText={setNotes}
               multiline
-            />
+ />
 
             <View style={styles.actions}>
               <Button onPress={() => void handleSubmit()} disabled={createMutation.isPending} loading={createMutation.isPending}>

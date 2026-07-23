@@ -96,12 +96,12 @@ export function ServicesPage() {
           ]}
           value={tab}
           onChange={(v) => setTab(v as ServicesTab)}
-        />
+ />
         <SearchBar
           value={search}
           onChange={setSearch}
           placeholder={tab === "reseller" ? "Search resellers…" : "Search clients…"}
-        />
+ />
         <Typography variant="small" muted>
           {total} {total === 1 ? "entry" : "entries"}
         </Typography>
@@ -146,7 +146,7 @@ export function ServicesPage() {
               </Button>
             </AppCard>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       ) : (
         <FlatList
           data={rows as ClientServicesAccessRow[]}
@@ -177,7 +177,7 @@ export function ServicesPage() {
               </Button>
             </AppCard>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <ResellerModulesEditModal
@@ -186,7 +186,7 @@ export function ServicesPage() {
         resellerName={editReseller?.resellerName}
         canEdit={canEditReseller}
         onClose={() => setEditReseller(null)}
-      />
+ />
 
       <ClientServicesDetailModal
         open={Boolean(viewClient)}
@@ -198,7 +198,7 @@ export function ServicesPage() {
           setTab("reseller");
           setEditReseller({ resellerId, resellerName });
         }}
-      />
+ />
     </MobileScreen>
   );
 }

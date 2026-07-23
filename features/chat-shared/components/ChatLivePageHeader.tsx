@@ -74,7 +74,7 @@ export function ChatLivePageHeader({
           value={viewSwitch.value}
           onChange={viewSwitch.onChange}
           ariaLabel={viewSwitch.ariaLabel}
-        />
+ />
       ) : null}
 
       {stripItems.length > 0 ? (
@@ -82,8 +82,7 @@ export function ChatLivePageHeader({
           horizontal
           showsHorizontalScrollIndicator={false}
           style={chatLiveNavStrip.scroll}
-          contentContainerStyle={chatLiveNavStrip.row}
-        >
+          contentContainerStyle={chatLiveNavStrip.row} showsVerticalScrollIndicator={false}>
           {stripItems.map((item) => {
             const active = Boolean(currentPath) && (currentPath === item.href || currentPath?.startsWith(`${item.href}/`));
             return (

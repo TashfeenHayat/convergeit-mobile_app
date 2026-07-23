@@ -1,32 +1,42 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter, type Href } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, type Href } from 'expo-router';
 
 import { MobileScreen } from '@/components/layout';
-import { AppCard, Button, Typography } from '@/components/ui';
+import { DashboardPageIntro } from '@/components/layout/DashboardPageIntro';
 import {
-  attendanceBreakIn,
-  attendanceBreakOut,
-  attendanceCheckIn,
-  attendanceCheckOut,
-  getMyAttendance,
-} from '@/api/hrms/attendance.api';
+  AppCard,
+  Button,
+  InputField,
+  Typography,
+} from '@/components/ui';
 import { extractApiErrorMessage } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth';
+import {
+  useAttendanceBreakInMutation,
+  useAttendanceBreakOutMutation,
+  useAttendanceCheckInMutation,
+  useAttendanceCheckOutMutation,
+  useAttendanceMeQuery,
+} from '@/lib/hooks/query/hrms';
 import { OP, hasAttendanceSelfOperational } from '@/lib/permissions';
 import { isRecord, unwrapApiData } from '@/lib/utils/core';
 import {
   formatAttendanceStatus,
   formatBreakSummary,
-  formatMinutesLabel,
-  formatTimeOnly,
   parseAttendanceDayState,
 } from '@/lib/utils/hrms/attendance-display';
 import { useAppTheme } from '@/theme';
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formatDisplayDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  if (!y || !m || !d) return iso;
+  return `${m}/${d}/${y}`;
 }
 
 function firstTodayRow(data: unknown): Record<string, unknown> {
@@ -40,9 +50,11 @@ function firstTodayRow(data: unknown): Record<string, unknown> {
   return row && isRecord(row) ? row : {};
 }
 
+/** Mark Attendance — web parity card: Date / Status / Break today + Back / Check in. */
 export function MarkAttendanceScreen() {
   const theme = useAppTheme();
-  const qc = useQueryClient();
+  const accent = theme.app.dashboard.accentBlue;
+  const router = useRouter();
   const { hasOperational } = useAuth();
   const [date] = useState(todayIso);
 
@@ -52,11 +64,15 @@ export function MarkAttendanceScreen() {
   const canBreakIn = hasOperational(OP.hrms.attendance.breakIn) || selfOk;
   const canBreakOut = hasOperational(OP.hrms.attendance.breakOut) || selfOk;
 
-  const todayQuery = useQuery({
-    queryKey: ['hrms', 'attendance', 'me', date],
-    queryFn: () => getMyAttendance({ from: date, to: date, page: 1, limit: 1 }),
-    staleTime: 30_000,
-  });
+  const todayQuery = useAttendanceMeQuery(
+    { from: date, to: date, page: 1, limit: 1 },
+    { enabled: Boolean(date.trim()) },
+  );
+
+  const checkIn = useAttendanceCheckInMutation();
+  const checkOut = useAttendanceCheckOutMutation();
+  const breakIn = useAttendanceBreakInMutation();
+  const breakOut = useAttendanceBreakOutMutation();
 
   const dayState = useMemo(
     () => parseAttendanceDayState(firstTodayRow(todayQuery.data)),
@@ -72,42 +88,15 @@ export function MarkAttendanceScreen() {
     return 'Not checked in';
   }, [todayQuery.data, dayState]);
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: ['hrms', 'attendance'] });
-  };
-
-  const checkIn = useMutation({
-    mutationFn: attendanceCheckIn,
-    onSuccess: () => {
-      invalidate();
-      Alert.alert('Checked in', 'Your attendance session started.');
-    },
-    onError: (err) => Alert.alert('Check-in failed', extractApiErrorMessage(err)),
-  });
-  const checkOut = useMutation({
-    mutationFn: attendanceCheckOut,
-    onSuccess: () => {
-      invalidate();
-      Alert.alert('Checked out', 'Your attendance session ended.');
-    },
-    onError: (err) => Alert.alert('Check-out failed', extractApiErrorMessage(err)),
-  });
-  const breakIn = useMutation({
-    mutationFn: attendanceBreakIn,
-    onSuccess: () => {
-      invalidate();
-      Alert.alert('Break started');
-    },
-    onError: (err) => Alert.alert('Break failed', extractApiErrorMessage(err)),
-  });
-  const breakOut = useMutation({
-    mutationFn: attendanceBreakOut,
-    onSuccess: () => {
-      invalidate();
-      Alert.alert('Break ended');
-    },
-    onError: (err) => Alert.alert('Break failed', extractApiErrorMessage(err)),
-  });
+  const breakSummary = useMemo(
+    () =>
+      formatBreakSummary(
+        dayState.breakMinutesTaken,
+        dayState.breakMinutesAllowed,
+        dayState.overBreakMinutes,
+      ),
+    [dayState],
+  );
 
   const busy =
     checkIn.isPending ||
@@ -116,105 +105,170 @@ export function MarkAttendanceScreen() {
     breakOut.isPending ||
     todayQuery.isFetching;
 
-  const breakSummary = formatBreakSummary(
-    dayState.breakMinutesTaken,
-    dayState.breakMinutesAllowed,
-    dayState.overBreakMinutes,
-  );
+  const runAction = (
+    mutate: {
+      mutate: (
+        vars: void,
+        opts: { onSuccess: () => void; onError: (e: unknown) => void },
+      ) => void;
+    },
+    successMessage: string,
+    errorFallback: string,
+  ) => {
+    mutate.mutate(undefined, {
+      onSuccess: () => Alert.alert('Success', successMessage),
+      onError: (err) =>
+        Alert.alert(
+          'Failed',
+          extractApiErrorMessage(err, errorFallback),
+        ),
+    });
+  };
 
   return (
     <MobileScreen>
       <View style={{ gap: theme.spacing.md }}>
-        <View style={{ gap: theme.spacing.xs }}>
-          <Typography variant="boldLarge">Mark Attendance</Typography>
-          <Typography variant="medium" muted>
-            Check in/out and manage breaks for today (shift timezone).
-          </Typography>
-        </View>
+        <DashboardPageIntro subtitle="Check in/out and manage breaks for today (shift timezone)." />
 
-        <AppCard style={{ gap: theme.spacing.md }}>
-          <StatRow label="Date" value={date} />
-          <StatRow label="Status" value={statusLabel} />
-          <StatRow
-            label="Check-in"
-            value={dayState.checkInAt ? formatTimeOnly(dayState.checkInAt) : '—'}
-          />
-          <StatRow
-            label="Check-out"
-            value={dayState.checkOutAt ? formatTimeOnly(dayState.checkOutAt) : '—'}
-          />
-          <StatRow label="Break today" value={breakSummary} />
-          <StatRow label="Worked" value={formatMinutesLabel(dayState.workedMinutes)} />
+        <AppCard style={{ gap: 16 }}>
+          <View style={styles.cardHeader}>
+            <View
+              style={[
+                styles.iconBox,
+                { backgroundColor: `${theme.app.dashboard.accentPurple}33` },
+              ]}
+            >
+              <Ionicons name="cash-outline" size={18} color="#FFFFFF" />
+            </View>
+            <Typography variant="medium16" style={{ fontWeight: '700' }}>
+              Mark Attendance
+            </Typography>
+          </View>
 
-          <View style={[styles.actions, { gap: theme.spacing.sm }]}>
-            {canCheckIn && !dayState.hasOpenSession ? (
+          <View style={styles.fields}>
+            <InputField
+              label="Date"
+              value={formatDisplayDate(date)}
+              editable={false}
+            />
+            <InputField label="Status" value={statusLabel} editable={false} />
+            <InputField
+              label="Break today"
+              value={breakSummary}
+              editable={false}
+            />
+          </View>
+
+          <View style={styles.actions}>
+            <Button
+              variant="secondary"
+              size="compact"
+              onPress={() =>
+                router.push('/attendance/my-attendance/index' as Href)
+              }
+              style={styles.actionBtn}
+            >
+              Back
+            </Button>
+
+            {canCheckIn ? (
               <Button
-                fullWidth
-                loading={checkIn.isPending}
-                disabled={busy}
-                onPress={() => checkIn.mutate()}
-              >
-                Check in
-              </Button>
-            ) : null}
-            {canCheckOut && dayState.hasOpenSession && !dayState.isOnBreak ? (
-              <Button
-                fullWidth
                 variant="secondary"
-                loading={checkOut.isPending}
-                disabled={busy}
-                onPress={() => checkOut.mutate()}
+                size="compact"
+                loading={checkIn.isPending}
+                disabled={busy || dayState.hasOpenSession}
+                onPress={() =>
+                  runAction(checkIn, 'Checked in.', 'Could not check in.')
+                }
+                style={styles.actionBtn}
               >
-                Check out
+                {checkIn.isPending ? 'Checking in…' : 'Check in'}
               </Button>
             ) : null}
-            {canBreakIn && dayState.hasOpenSession && !dayState.isOnBreak ? (
+
+            {dayState.hasOpenSession && !dayState.isOnBreak && canBreakIn ? (
               <Button
-                fullWidth
-                variant="outlined"
+                variant="secondary"
+                size="compact"
                 loading={breakIn.isPending}
                 disabled={busy}
-                onPress={() => breakIn.mutate()}
+                onPress={() =>
+                  runAction(
+                    breakIn,
+                    'Break started.',
+                    'Could not start break.',
+                  )
+                }
+                style={styles.actionBtn}
               >
-                Start break
+                {breakIn.isPending ? 'Starting break…' : 'Start break'}
               </Button>
             ) : null}
-            {canBreakOut && dayState.isOnBreak ? (
+
+            {dayState.hasOpenSession && dayState.isOnBreak && canBreakOut ? (
               <Button
-                fullWidth
-                variant="outlined"
+                variant="secondary"
+                size="compact"
                 loading={breakOut.isPending}
                 disabled={busy}
-                onPress={() => breakOut.mutate()}
+                onPress={() =>
+                  runAction(breakOut, 'Break ended.', 'Could not end break.')
+                }
+                style={styles.actionBtn}
               >
-                End break
+                {breakOut.isPending ? 'Ending break…' : 'End break'}
+              </Button>
+            ) : null}
+
+            {dayState.hasOpenSession && canCheckOut ? (
+              <Button
+                variant="primary"
+                size="compact"
+                loading={checkOut.isPending}
+                disabled={busy}
+                onPress={() =>
+                  runAction(
+                    checkOut,
+                    'Checked out.',
+                    'Could not check out.',
+                  )
+                }
+                style={[styles.actionBtn, { backgroundColor: accent }]}
+              >
+                {checkOut.isPending ? 'Checking out…' : 'Check out'}
               </Button>
             ) : null}
           </View>
-
-          <Link href={"/attendance/my-attendance/index" as Href} asChild>
-            <Button variant="ghost" fullWidth>
-              View my attendance
-            </Button>
-          </Link>
         </AppCard>
       </View>
     </MobileScreen>
   );
 }
 
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.statRow}>
-      <Typography variant="small" muted>
-        {label}
-      </Typography>
-      <Typography variant="medium16">{value}</Typography>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  actions: { marginTop: 4 },
-  statRow: { gap: 2 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fields: {
+    gap: 12,
+  },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 4,
+  },
+  actionBtn: {
+    minWidth: 110,
+  },
 });

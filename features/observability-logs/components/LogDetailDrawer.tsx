@@ -70,7 +70,7 @@ export function LogDetailDrawer({ open, logId, tab, onClose }: LogDetailDrawerPr
           Log entry not found.
         </Typography>
       ) : (
-        <ScrollView style={styles.scroll} contentContainerStyle={{ gap: 12 }}>
+        <ScrollView style={styles.scroll} contentContainerStyle={{ gap: 12 }} showsVerticalScrollIndicator={false}>
           <Field label="Event" value={detail.eventType} />
           <Field label="Time" value={formatLogTimestamp(detail.createdAt)} />
           <Field label="Actor" value={formatLogActor(detail.actor)} />
@@ -91,7 +91,7 @@ export function LogDetailDrawer({ open, logId, tab, onClose }: LogDetailDrawerPr
                     ? detail.payloadJson
                     : null
               }
-            />
+ />
           </View>
         </ScrollView>
       )}

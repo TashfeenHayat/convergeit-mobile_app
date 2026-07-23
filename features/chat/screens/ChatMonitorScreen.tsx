@@ -54,7 +54,7 @@ export function ChatMonitorScreen() {
           ]}
           value={tab}
           onChange={(v) => setTab(v as MonitorTab)}
-        />
+ />
       </View>
 
       {query.isLoading && !query.data ? (
@@ -62,7 +62,7 @@ export function ChatMonitorScreen() {
           <ActivityIndicator color={theme.app.dashboard.accentBlue} />
         </View>
       ) : query.isError ? (
-        <AppCard style={{ marginHorizontal: theme.spacing.screen }}>
+        <AppCard>
           <Typography variant="medium" color={theme.app.danger}>
             {extractApiErrorMessage(query.error, 'Could not load monitor.')}
           </Typography>
@@ -72,7 +72,6 @@ export function ChatMonitorScreen() {
           data={items}
           keyExtractor={(item, index) => rowId(item) || `m-${index}`}
           contentContainerStyle={{
-            paddingHorizontal: theme.spacing.screen,
             gap: theme.spacing.sm,
             paddingBottom: 24,
           }}
@@ -81,7 +80,7 @@ export function ChatMonitorScreen() {
               refreshing={query.isRefetching && !query.isLoading}
               onRefresh={() => void query.refetch()}
               tintColor={theme.app.dashboard.accentBlue}
-            />
+          />
           }
           ListEmptyComponent={
             <AppCard>
@@ -121,7 +120,7 @@ export function ChatMonitorScreen() {
               </Pressable>
             );
           }}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );
@@ -129,7 +128,7 @@ export function ChatMonitorScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingTop: 12 },
-  header: { paddingHorizontal: 16, marginBottom: 12 },
+  header: { marginBottom: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   row: {
     borderWidth: 1,

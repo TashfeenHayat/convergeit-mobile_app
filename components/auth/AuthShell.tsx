@@ -81,8 +81,7 @@ export function AuthShell({ heading, subheading, children, glassCard = false }: 
               },
             ]}
             keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+           showsVerticalScrollIndicator={false}>
             <AuthOnGlassContext.Provider value={glassCard}>
               <Card style={styles.card}>
                 <Image
@@ -90,7 +89,7 @@ export function AuthShell({ heading, subheading, children, glassCard = false }: 
                   style={styles.logo}
                   resizeMode="contain"
                   accessibilityLabel="ConvergeIT"
-                />
+ />
                 {heading ? (
                   <Typography
                     variant="boldLarge"

@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter, type Href } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
 import { MobileScreen } from "@/components/layout";
 import { AppCard, Button, Typography } from "@/components/ui";
 import { extractApiErrorMessage } from "@/lib/api/errors";
+import { useWebsiteAssignmentDetailQuery } from "@/lib/hooks/query/website-assignments/hooks";
 import { useWebsiteAssignmentGates } from "@/lib/permissions/use-website-assignment-gates";
-import {
-  useWebsiteAssignmentDetailQuery,
-  useWebsiteAssignmentsWebsitesQuery,
-} from "@/lib/hooks/query/website-assignments/hooks";
+import { glassUi } from "@/lib/theme/glass-ui";
 import { useAppTheme } from "@/theme";
 import { PickWebsiteFields, isPickWebsiteComplete } from "./PickWebsiteFields";
 import type { PickWebsitePreset } from "./PickWebsiteModal";
@@ -20,11 +19,21 @@ export type AssignWebsiteWorkspaceProps = {
   preset?: AssignWebsitePreset | null;
 };
 
-/** Mobile website assignment workspace — pick website, view roster status. */
-export function AssignWebsiteWorkspace({ preset }: AssignWebsiteWorkspaceProps) {
+const FLOW_STEPS = [
+  { key: "website", title: "Website", subtitle: "Organization & site" },
+  { key: "scheduling", title: "Scheduling", subtitle: "Service hours" },
+  { key: "roster", title: "Agent roster", subtitle: "Primary / Backup" },
+  { key: "complete", title: "Complete", subtitle: "Ready for chat" },
+] as const;
+
+/** Assign website agents — step 1 matches web `/website-assigning/assign`. */
+export function AssignWebsiteWorkspace({
+  preset,
+}: AssignWebsiteWorkspaceProps) {
   const theme = useAppTheme();
   const router = useRouter();
   const gates = useWebsiteAssignmentGates();
+  const accent = theme.app.dashboard.accentBlue;
   const [picked, setPicked] = useState<PickWebsitePreset>({
     websiteId: preset?.websiteId ?? "",
     parentCompanyId: preset?.parentCompanyId ?? "",
@@ -36,23 +45,12 @@ export function AssignWebsiteWorkspace({ preset }: AssignWebsiteWorkspaceProps) 
     if (preset?.websiteId) setPicked(preset);
   }, [preset]);
 
-  const websitesQuery = useWebsiteAssignmentsWebsitesQuery(
-    {
-      all: true,
-      parentCompanyId: picked.parentCompanyId || undefined,
-      childCompanyId: picked.childCompanyId || undefined,
-      resellerId: picked.resellerId || undefined,
-    },
-    { enabled: Boolean(picked.parentCompanyId.trim()) },
-  );
-
   const websiteId = picked.websiteId.trim();
   const detailQuery = useWebsiteAssignmentDetailQuery(websiteId, {
     enabled: websiteId.length > 0 && gates.view,
   });
-
-  const websites = websitesQuery.data?.data?.items ?? [];
   const detail = detailQuery.data?.data;
+  const pickComplete = isPickWebsiteComplete(picked);
 
   if (!gates.view) {
     return (
@@ -68,117 +66,213 @@ export function AssignWebsiteWorkspace({ preset }: AssignWebsiteWorkspaceProps) 
 
   return (
     <MobileScreen scroll={false} contentStyle={styles.screen}>
-      <View style={{ gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
-        <Typography variant="boldLarge">Assign website</Typography>
-        <Typography variant="medium" muted>
-          Pick a website to review assignment status and rosters.
-        </Typography>
-        <PickWebsiteFields value={picked} onChange={setPicked} />
-      </View>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { gap: theme.spacing.md }]}
+        keyboardShouldPersistTaps="handled"
+       showsVerticalScrollIndicator={false}>
+        <View style={styles.titleRow}>
+          <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+            <Typography variant="boldLarge">Assign website agents</Typography>
+            <Typography variant="medium" muted>
+              Pick the website, configure the service schedule and agent roster
+              — Primary, Secondary, and Backup per topic.
+            </Typography>
+          </View>
+          <Button
+            size="compact"
+            variant="outlined"
+            onPress={() => router.push("/website-assigning" as Href)}
+          >
+            ← All websites
+          </Button>
+        </View>
 
-      {!isPickWebsiteComplete(picked) ? (
-        <AppCard>
-          <Typography variant="medium" muted>
-            Select reseller, parent company, and website to continue.
-          </Typography>
-        </AppCard>
-      ) : detailQuery.isLoading ? (
-        <ActivityIndicator color={theme.app.dashboard.accentBlue} />
-      ) : detailQuery.isError ? (
-        <AppCard>
-          <Typography variant="medium" color={theme.app.danger}>
-            {extractApiErrorMessage(detailQuery.error, "Could not load assignment detail.")}
-          </Typography>
-        </AppCard>
-      ) : detail ? (
-        <View style={{ gap: theme.spacing.md }}>
-          <AppCard style={{ gap: 8 }}>
-            <Typography variant="medium16">{detail.url ?? websiteId}</Typography>
-            <Typography variant="small" muted>
-              {detail.childCompanyName} · {detail.parentCompanyName}
-            </Typography>
-            <Typography variant="small" muted>
-              Service scheduling: {detail.serviceSchedulingConfigured ? "Configured" : "Not set"}
-            </Typography>
-            <Typography variant="small" muted>
-              Visitor topics: {detail.visitorTopicsConfigured ? "Configured" : "Not set"}
-            </Typography>
-            <Typography variant="small" muted>
-              Departments with roster: {detail.departmentRoster?.length ?? 0}
-            </Typography>
-          </AppCard>
+        <View style={styles.stepRow}>
+          {FLOW_STEPS.map((step, index) => {
+            const active = index === 0;
+            return (
+              <View
+                key={step.key}
+                style={[
+                  styles.stepCard,
+                  {
+                    borderColor: active
+                      ? accent
+                      : theme.app.dashboard.cardBorder,
+                    backgroundColor: theme.app.dashboard.overlayLight,
+                    opacity: active ? 1 : 0.55,
+                  },
+                  active && styles.stepCardActive,
+                ]}
+              >
+                <Typography variant="small" muted style={{ fontWeight: "700" }}>
+                  {index + 1}
+                </Typography>
+                <Typography
+                  variant="medium"
+                  style={{ fontWeight: "700" }}
+                  numberOfLines={1}
+                >
+                  {step.title}
+                </Typography>
+                <Typography variant="small" muted numberOfLines={2}>
+                  {step.subtitle}
+                </Typography>
+              </View>
+            );
+          })}
+        </View>
 
-          <View style={{ gap: 8 }}>
-            <Button
-              variant="outlined"
-              onPress={() => router.push(`/website-assigning/website/${websiteId}` as never)}
-            >
-              Open website detail
-            </Button>
-            <Button
-              variant="outlined"
-              onPress={() =>
-                router.push(`/website-assigning/website/${websiteId}/service-scheduling` as never)
-              }
-            >
-              Service scheduling
-            </Button>
-            <Button
-              variant="outlined"
-              onPress={() =>
-                router.push(`/website-assigning/website/${websiteId}/inquire-topics` as never)
-              }
-            >
-              Inquire topics
-            </Button>
-            <Button
-              variant="outlined"
-              onPress={() =>
-                Alert.alert(
-                  "Full roster editor",
-                  "Department roster editing is available on the web dashboard.",
-                )
-              }
-            >
-              Edit rosters (web)
-            </Button>
+        <View
+          style={[
+            styles.stepBanner,
+            {
+              borderColor: theme.app.dashboard.cardBorder,
+              backgroundColor: theme.app.dashboard.overlayLight,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.stepBannerIcon,
+              {
+                backgroundColor: `${accent}22`,
+                borderColor: glassUi.border.subtle,
+              },
+            ]}
+          >
+            <Ionicons name="clipboard-outline" size={18} color={accent} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="medium16" style={{ fontWeight: "700" }}>
+              Step 1 — Select website
+            </Typography>
+            <Typography variant="small" muted>
+              Choose organization and website to begin assignment.
+            </Typography>
           </View>
         </View>
-      ) : (
-        <FlatList
-          data={websites}
-          keyExtractor={(item) => item.websiteId}
-          contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: 24 }}
-          ListEmptyComponent={
+
+        <View
+          style={[
+            styles.orgCard,
+            {
+              borderColor: theme.app.dashboard.cardBorder,
+              backgroundColor: theme.app.dashboard.overlayLight,
+            },
+          ]}
+        >
+          <Typography variant="medium16" style={{ fontWeight: "700" }}>
+            1 Organization & website
+          </Typography>
+          <Typography variant="small" muted>
+            Select reseller, parent company, child company, then the website.
+          </Typography>
+          <PickWebsiteFields
+            value={picked}
+            onChange={setPicked}
+            showProgressChips={false}
+            flatLayout
+ />
+        </View>
+
+        {pickComplete ? (
+          detailQuery.isLoading ? (
+            <ActivityIndicator color={accent} />
+          ) : detailQuery.isError ? (
             <AppCard>
-              <Typography variant="medium" muted>
-                No websites in this scope.
+              <Typography variant="medium" color={theme.app.danger}>
+                {extractApiErrorMessage(
+                  detailQuery.error,
+                  "Could not load assignment detail.",
+                )}
               </Typography>
             </AppCard>
-          }
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() =>
-                setPicked((p) => ({
-                  ...p,
-                  websiteId: item.websiteId,
-                }))
-              }
-            >
-              <AppCard style={{ gap: 4 }}>
-                <Typography variant="medium16">{item.url ?? item.websiteId}</Typography>
+          ) : detail ? (
+            <View style={{ gap: 10 }}>
+              <AppCard style={{ gap: 6 }}>
+                <Typography variant="medium16" style={{ fontWeight: "700" }}>
+                  {detail.url ?? websiteId}
+                </Typography>
                 <Typography variant="small" muted>
-                  {(item.filledSlots ?? item.assignedCount) > 0 ? "Has assignments" : "Unassigned"}
+                  {[detail.childCompanyName, detail.parentCompanyName]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </Typography>
               </AppCard>
-            </Pressable>
-          )}
-        />
-      )}
+              <Button
+                onPress={() =>
+                  router.push(
+                    `/website-assigning/website/${encodeURIComponent(websiteId)}/service-scheduling` as Href,
+                  )
+                }
+              >
+                Continue to scheduling
+              </Button>
+              <Button
+                variant="outlined"
+                onPress={() =>
+                  router.push(
+                    `/website-assigning/website/${encodeURIComponent(websiteId)}` as Href,
+                  )
+                }
+              >
+                Open website detail
+              </Button>
+            </View>
+          ) : null
+        ) : null}
+      </ScrollView>
     </MobileScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingTop: 12 },
+  screen: { flex: 1, paddingHorizontal: 8 },
+  scroll: { paddingTop: 4, paddingBottom: 32 },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  stepRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  stepCard: {
+    flexGrow: 1,
+    flexBasis: "45%",
+    minWidth: 140,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 12,
+    gap: 2,
+  },
+  stepCardActive: {
+    borderWidth: 2,
+  },
+  stepBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
+  },
+  stepBannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  orgCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    gap: 12,
+  },
 });

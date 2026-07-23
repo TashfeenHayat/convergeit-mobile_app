@@ -115,7 +115,7 @@ export function ChatQueueSidebar({
             placeholder="Search"
             placeholderTextColor={tokens.colors.textPlaceholder}
             style={styles.searchInput}
-          />
+ />
         </LiquidGlass>
       </View>
 
@@ -282,7 +282,7 @@ export function ChatQueueSidebar({
             </Pressable>
           );
         }}
-      />
+  showsVerticalScrollIndicator={false}/>
     </View>
   );
 }

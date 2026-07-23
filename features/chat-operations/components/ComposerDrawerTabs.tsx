@@ -123,7 +123,7 @@ export function ComposerDrawerTabs({
             placeholder="Search replies…"
             placeholderTextColor={tokens.colors.textPlaceholder}
             style={styles.searchInput}
-          />
+ />
           <FlatList
             data={filteredCanned}
             keyExtractor={(item) => item.id}
@@ -155,7 +155,7 @@ export function ComposerDrawerTabs({
                 </Button>
               </View>
             )}
-          />
+  showsVerticalScrollIndicator={false}/>
         </View>
       </Modal>
 
@@ -183,7 +183,7 @@ export function ComposerDrawerTabs({
             disabled={aiDisabled}
             websiteRequiredDisabled={websiteRequiredDisabled}
             hasConversation={hasConversation}
-          />
+ />
         </View>
       </Modal>
     </>

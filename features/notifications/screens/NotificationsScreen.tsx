@@ -89,7 +89,7 @@ export function NotificationsScreen() {
           ]}
           value={filter}
           onChange={(v) => setFilter(v as Filter)}
-        />
+ />
         <Button
           variant="outlined"
           fullWidth
@@ -105,7 +105,7 @@ export function NotificationsScreen() {
           <ActivityIndicator color={theme.app.dashboard.accentBlue} />
         </View>
       ) : query.isError ? (
-        <AppCard style={{ marginHorizontal: theme.spacing.screen }}>
+        <AppCard>
           <Typography variant="medium" color={theme.app.danger}>
             {extractApiErrorMessage(query.error, 'Could not load notifications.')}
           </Typography>
@@ -115,7 +115,6 @@ export function NotificationsScreen() {
           data={items}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{
-            paddingHorizontal: theme.spacing.screen,
             gap: theme.spacing.sm,
             paddingBottom: 24,
           }}
@@ -124,7 +123,7 @@ export function NotificationsScreen() {
               refreshing={query.isRefetching && !query.isLoading}
               onRefresh={() => void query.refetch()}
               tintColor={theme.app.dashboard.accentBlue}
-            />
+          />
           }
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -173,12 +172,12 @@ export function NotificationsScreen() {
                 {unread ? (
                   <View
                     style={[styles.dot, { backgroundColor: theme.app.dashboard.accentBlue }]}
-                  />
+ />
                 ) : null}
               </Pressable>
             );
           }}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );
@@ -186,7 +185,7 @@ export function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingTop: 12 },
-  header: { paddingHorizontal: 16, marginBottom: 12 },
+  header: { marginBottom: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: {
     marginTop: 16,

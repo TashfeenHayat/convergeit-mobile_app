@@ -161,7 +161,7 @@ export function FeedbackPage() {
           ]}
           value={tab}
           onChange={(v) => setTab(v as FeedbackTab)}
-        />
+ />
       </View>
 
       {tab === "submissions" ? (
@@ -181,7 +181,7 @@ export function FeedbackPage() {
               })),
             ]}
             searchable={false}
-          />
+ />
           {submissionsQuery.isLoading ? (
             <ActivityIndicator color={theme.app.dashboard.accentBlue} style={{ marginTop: 24 }} />
           ) : submissionsQuery.isError ? (
@@ -225,14 +225,14 @@ export function FeedbackPage() {
                     page={submissionsPage}
                     pageCount={submissionsQuery.data?.totalPages ?? 1}
                     onPageChange={setSubmissionsPage}
-                  />
+ />
                 ) : null
               }
-            />
+  showsVerticalScrollIndicator={false}/>
           )}
         </>
       ) : (
-        <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: 32 }}>
+        <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
           {settingsQuery.isLoading ? (
             <ActivityIndicator color={theme.app.dashboard.accentBlue} />
           ) : (
@@ -245,20 +245,20 @@ export function FeedbackPage() {
                     value={preview.ratingEnabled}
                     onValueChange={(v) => patch({ ratingEnabled: v })}
                     disabled={!canUpdate}
-                  />
+ />
                 </View>
                 <InputField
                   label="Good label"
                   value={preview.goodLabel}
                   onChangeText={(v) => patch({ goodLabel: v })}
                   editable={canUpdate && preview.ratingEnabled}
-                />
+ />
                 <InputField
                   label="Poor label"
                   value={preview.poorLabel}
                   onChangeText={(v) => patch({ poorLabel: v })}
                   editable={canUpdate && preview.ratingEnabled}
-                />
+ />
               </AppCard>
 
               <AppCard style={{ gap: theme.spacing.sm }}>
@@ -268,13 +268,13 @@ export function FeedbackPage() {
                   value={preview.poorFormTitle}
                   onChangeText={(v) => patch({ poorFormTitle: v })}
                   editable={canUpdate}
-                />
+ />
                 <InputField
                   label="Prompt"
                   value={preview.poorFormPrompt}
                   onChangeText={(v) => patch({ poorFormPrompt: v })}
                   editable={canUpdate}
-                />
+ />
                 <InputField
                   label="Reason chips (one per line)"
                   value={poorReasonsText}
@@ -284,13 +284,13 @@ export function FeedbackPage() {
                   }}
                   editable={canUpdate}
                   multiline
-                />
+ />
                 <InputField
                   label="Submit button"
                   value={preview.poorSubmitLabel}
                   onChangeText={(v) => patch({ poorSubmitLabel: v })}
                   editable={canUpdate}
-                />
+ />
               </AppCard>
 
               <AppCard style={{ gap: theme.spacing.sm }}>
@@ -301,7 +301,7 @@ export function FeedbackPage() {
                     value={preview.notesEnabled}
                     onValueChange={(v) => patch({ notesEnabled: v })}
                     disabled={!canUpdate}
-                  />
+ />
                 </View>
                 <InputField
                   label="Placeholder"
@@ -309,7 +309,7 @@ export function FeedbackPage() {
                   onChangeText={(v) => patch({ notesPlaceholder: v })}
                   editable={canUpdate && preview.notesEnabled}
                   multiline
-                />
+ />
               </AppCard>
 
               {canUpdate ? (

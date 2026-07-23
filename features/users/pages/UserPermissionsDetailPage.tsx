@@ -100,8 +100,7 @@ export function UserPermissionsDetailPage({ userId }: UserPermissionsDetailPageP
             }}
             tintColor={accent}
           />
-        }
-      >
+        } showsVerticalScrollIndicator={false}>
         <Pressable
           onPress={() => router.back()}
           hitSlop={8}
@@ -172,7 +171,7 @@ export function UserPermissionsDetailPage({ userId }: UserPermissionsDetailPageP
                       tone={
                         profile.userType.toLowerCase() === 'internal' ? 'info' : 'success'
                       }
-                    />
+ />
                   ) : null}
                   {profile?.role ? (
                     <Typography variant="small" muted numberOfLines={1}>

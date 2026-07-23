@@ -242,7 +242,7 @@ export function BillingHomePage() {
               </AppCard>
             );
           }}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );

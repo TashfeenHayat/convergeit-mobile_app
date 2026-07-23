@@ -155,7 +155,7 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/attendance/team-attendance",
     "href": "/attendance/team-attendance",
-    "title": "Team Attendance",
+    "title": "Attendance",
     "webPath": "/dashboard/attendance/team-attendance",
     "group": "dashboard"
   },
@@ -386,7 +386,7 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/chat-widget",
     "href": "/chat-widget",
-    "title": "Chat Widget",
+    "title": "Widget Management",
     "webPath": "/dashboard/chat-widget",
     "group": "dashboard"
   },
@@ -400,14 +400,14 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/chat-widget/[widgetKey]/edit",
     "href": "/chat-widget/[widgetKey]/edit",
-    "title": "Edit",
+    "title": "Edit widget — choose type",
     "webPath": "/dashboard/chat-widget/[widgetKey]/edit",
     "group": "dashboard"
   },
   {
     "webRoute": "dashboard/chat-widget/add",
     "href": "/chat-widget/add",
-    "title": "Add",
+    "title": "Widget Type Selection",
     "webPath": "/dashboard/chat-widget/add",
     "group": "dashboard"
   },
@@ -421,21 +421,20 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/chat-widget/add/chat/button",
     "href": "/chat-widget/add/chat/button",
-    "title": "Button",
+    "title": "Widget Customization",
     "webPath": "/dashboard/chat-widget/add/chat/button",
     "group": "dashboard"
   },
   {
     "webRoute": "dashboard/chat-widget/add/chat/notifications",
     "href": "/chat-widget/add/chat/notifications",
-    "title": "Notifications",
-    "webPath": "/dashboard/chat-widget/add/chat/notifications",
+    "title": "Alerts & Forms",
     "group": "dashboard"
   },
   {
     "webRoute": "dashboard/chat-widget/add/chat/script",
     "href": "/chat-widget/add/chat/script",
-    "title": "Script",
+    "title": "Widget Script",
     "webPath": "/dashboard/chat-widget/add/chat/script",
     "group": "dashboard"
   },
@@ -939,14 +938,14 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/leave/apply-leave",
     "href": "/leave/apply-leave",
-    "title": "Apply Leave",
+    "title": "Apply Leave (Employee)",
     "webPath": "/dashboard/leave/apply-leave",
     "group": "dashboard"
   },
   {
     "webRoute": "dashboard/leave/approval-inbox",
     "href": "/leave/approval-inbox",
-    "title": "Approval Inbox",
+    "title": "Approval Inbox — Department Heads",
     "webPath": "/dashboard/leave/approval-inbox",
     "group": "dashboard"
   },
@@ -967,7 +966,7 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/leave/leave-type",
     "href": "/leave/leave-type",
-    "title": "Leave Type",
+    "title": "Leave Types",
     "webPath": "/dashboard/leave/leave-type",
     "group": "dashboard"
   },
@@ -1004,6 +1003,13 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
     "href": "/payment-tracking",
     "title": "Payment Tracking",
     "webPath": "/dashboard/payment-tracking",
+    "group": "dashboard"
+  },
+  {
+    "webRoute": "dashboard/text-us",
+    "href": "/text-us",
+    "title": "Text Us",
+    "webPath": "/dashboard/text-us",
     "group": "dashboard"
   },
   {
@@ -1163,21 +1169,21 @@ export const WEB_ROUTE_REGISTRY: readonly WebRouteEntry[] = [
   {
     "webRoute": "dashboard/shifts/department-shift",
     "href": "/shifts/department-shift",
-    "title": "Department Shift",
+    "title": "Department Shift Assignments",
     "webPath": "/dashboard/shifts/department-shift",
     "group": "dashboard"
   },
   {
     "webRoute": "dashboard/shifts/pool-shift",
     "href": "/shifts/pool-shift",
-    "title": "Pool Shift",
+    "title": "Pool Shift Assignments",
     "webPath": "/dashboard/shifts/pool-shift",
     "group": "dashboard"
   },
   {
     "webRoute": "dashboard/shifts/user-shift",
     "href": "/shifts/user-shift",
-    "title": "User Shift",
+    "title": "User Shift Roster",
     "webPath": "/dashboard/shifts/user-shift",
     "group": "dashboard"
   },

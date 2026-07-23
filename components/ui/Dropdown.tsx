@@ -90,7 +90,7 @@ export function Dropdown({
                     </Pressable>
                   );
                 }}
-              />
+  showsVerticalScrollIndicator={false}/>
             </LiquidGlass>
           </Pressable>
         </Pressable>

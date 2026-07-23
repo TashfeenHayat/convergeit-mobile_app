@@ -34,13 +34,13 @@ export function ChatSettingsQaRosterWorkspace() {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="QA Roster"
           subtitle="Assign QA reviewers per website. Pick a website in scope filters."
           navPreset="configure"
-        />
+ />
         <AppCard style={styles.card}>
           <ChatScopeFiltersPanel
             compact
@@ -52,7 +52,7 @@ export function ChatSettingsQaRosterWorkspace() {
             parentCompanyOptions={scopeFilters.parentCompanyOptions}
             childCompanyOptions={scopeFilters.childCompanyOptions}
             websiteOptions={scopeFilters.websiteOptions}
-          />
+ />
           <Typography variant="medium" style={{ fontWeight: "600" }}>
             {websiteId ? `Website selected: ${websiteId.slice(0, 8)}…` : "Select a website to manage QA roster"}
           </Typography>

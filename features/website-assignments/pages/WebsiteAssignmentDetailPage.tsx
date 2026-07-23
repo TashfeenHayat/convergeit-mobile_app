@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentProps } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,149 +11,330 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, type Href } from 'expo-router';
 
-import { MobileScreen } from '@/components/layout';
-import { DashboardPageIntro } from '@/components/layout/DashboardPageIntro';
-import {
-  AppCard,
-  Button,
-  ConfirmActionModal,
-  FormModal,
-  SelectField,
-  StatusChip,
-  Typography,
-} from '@/components/ui';
 import type {
   ServiceChannel,
   WebsiteAssignmentTier,
-  WebsiteDepartmentRosterRow,
 } from '@/api/types/website-assignments.types';
+import { MobileScreen } from '@/components/layout';
+import {
+  AppCard,
+  Button,
+  Checkbox,
+  SearchBar,
+  SelectField,
+  Typography,
+} from '@/components/ui';
+import { useVisitorTopicsQuery } from '@/features/chat-settings/hooks/useServiceScheduling';
+import { useQaRosterExclusionsQuery } from '@/features/chat-settings/hooks/useChatSettings';
 import { extractApiErrorMessage } from '@/lib/api/errors';
 import {
-  useAssignWebsiteTierMutation,
-  useRemoveWebsiteSlotMutation,
+  useDepartmentRosterCoverageQuery,
+  usePutDepartmentRosterCoverageMutation,
+  usePutDepartmentRosterMutation,
   useWebsiteAssignmentDetailQuery,
 } from '@/lib/hooks/query/website-assignments';
 import { useUsersListQuery } from '@/lib/hooks/query/users';
 import { useWebsiteAssignmentGates } from '@/lib/permissions/use-website-assignment-gates';
-import { clearAllDepartmentRosters } from '@/features/website-assignments/utils/clear-website-roster';
-import { extractUsersRows } from '@/lib/users/user-list-rows';
+import {
+  resolveRosterDepartmentId,
+  rosterAssignmentUiChannels,
+  rosterVisibleTiers,
+} from '@/lib/website-assignments/roster-assignment-channels';
 import { glassUi } from '@/lib/theme/glass-ui';
+import { buildRosterUserOptions } from '@/features/website-assignments/utils/roster-user-options';
+import {
+  blocksFromCoverage,
+  blocksToPutPayload,
+  formatCoverageBlockHoursLabel,
+  splitServiceHoursIntoBlocks,
+  type CoverageBlockDraft,
+} from '@/features/website-assignments/utils/coverage-block-draft.utils';
+import { draftToChannelBody, slotsFromRoster } from '@/features/website-assignments/utils/roster-draft.utils';
+import { emptySlotDraft, type SlotDraft } from '@/features/website-assignments/components/RosterSlotPicker';
 import { useAppTheme } from '@/theme';
-import { useQueryClient } from '@tanstack/react-query';
-import { websiteAssignmentsKeys } from '@/lib/hooks/query/website-assignments/keys';
-
-const TIERS: WebsiteAssignmentTier[] = ['Primary', 'Secondary', 'Backup'];
 
 export type WebsiteAssignmentDetailPageProps = {
   websiteId: string;
 };
 
+function operatingModeLabel(mode?: string | null): string {
+  switch (mode) {
+    case 'internal_only':
+      return 'Internal only';
+    case 'external_only':
+      return 'External only';
+    case 'both':
+      return 'Internal + External';
+    default:
+      return mode?.trim() || '—';
+  }
+}
+
+function formatHoursLabel(hours: {
+  startTime?: string;
+  endTime?: string;
+  timezone?: string;
+  daysOfWeekLabels?: string[];
+} | null | undefined): string {
+  if (!hours) return 'Service hours not configured yet.';
+  const days = (hours.daysOfWeekLabels ?? []).join(', ');
+  const start = hours.startTime ?? '—';
+  const end = hours.endTime ?? '—';
+  const tz = hours.timezone ?? '';
+  return `${start} – ${end}${tz ? ` (${tz})` : ''}${days ? ` — ${days}` : ''}`;
+}
+
+const TIER_BADGE: Record<
+  WebsiteAssignmentTier,
+  { bg: string; border: string; color: string }
+> = {
+  Primary: { bg: 'rgba(34,197,94,0.18)', border: 'rgba(34,197,94,0.45)', color: '#4ade80' },
+  Secondary: { bg: 'rgba(59,130,246,0.18)', border: 'rgba(59,130,246,0.45)', color: '#60a5fa' },
+  Backup: { bg: 'rgba(245,158,11,0.18)', border: 'rgba(245,158,11,0.45)', color: '#fbbf24' },
+};
+
 export function WebsiteAssignmentDetailPage({ websiteId }: WebsiteAssignmentDetailPageProps) {
   const theme = useAppTheme();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const gates = useWebsiteAssignmentGates();
   const accent = theme.app.dashboard.accentBlue;
   const id = websiteId.trim();
 
+  const [channel, setChannel] = useState<ServiceChannel>('Internal');
+  const [departmentId, setDepartmentId] = useState('');
+  const [assignMode, setAssignMode] = useState<'same_day' | 'by_time'>('same_day');
+  const [dutyBlocks, setDutyBlocks] = useState<CoverageBlockDraft[] | null>(null);
+  const [activeBlockIndex, setActiveBlockIndex] = useState(0);
+  const [userFilter, setUserFilter] = useState<'all' | 'Internal' | 'External'>('all');
+  const [search, setSearch] = useState('');
+  const [slots, setSlots] = useState<SlotDraft>(() => emptySlotDraft());
+
   const detailQuery = useWebsiteAssignmentDetailQuery(id, {
     enabled: gates.view && id.length > 0,
   });
-  const assignMutation = useAssignWebsiteTierMutation();
-  const removeMutation = useRemoveWebsiteSlotMutation();
-  const usersQuery = useUsersListQuery({ all: true }, { enabled: gates.assign });
-
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [clearOpen, setClearOpen] = useState(false);
-  const [departmentId, setDepartmentId] = useState('');
-  const [channel, setChannel] = useState<ServiceChannel>('External');
-  const [tier, setTier] = useState<WebsiteAssignmentTier>('Primary');
-  const [userId, setUserId] = useState('');
-  const [removingKey, setRemovingKey] = useState<string | null>(null);
+  const topicsQuery = useVisitorTopicsQuery(id, gates.view && id.length > 0);
+  const exclusionsQuery = useQaRosterExclusionsQuery(id, gates.view && id.length > 0);
 
   const detail = detailQuery.data?.data;
-  const title = detail?.name?.trim() || detail?.url?.trim() || id.slice(0, 8);
+  const departments = detail?.departmentRoster ?? [];
+  const operatingChannels = detail?.operatingChannels ?? 'internal_only';
+  const visibleTiers = useMemo(
+    () => rosterVisibleTiers(operatingChannels),
+    [operatingChannels],
+  );
+  const showSecondary = visibleTiers.includes('Secondary');
 
-  const userOptions = useMemo(() => {
-    return extractUsersRows(usersQuery.data)
-      .filter((u) => u.id)
-      .map((u) => ({
-        value: u.id,
-        label: `${u.user || '—'} — ${u.email || '—'}`,
-      }));
-  }, [usersQuery.data]);
+  useEffect(() => {
+    const channels = detail?.allowedAssignmentChannels?.length
+      ? detail.allowedAssignmentChannels
+      : rosterAssignmentUiChannels(operatingChannels);
+    if (channels.length && !channels.includes(channel)) {
+      setChannel(channels[0]);
+    }
+  }, [detail?.allowedAssignmentChannels, operatingChannels, channel]);
+
+  useEffect(() => {
+    if (!detail) return;
+    const resolved = resolveRosterDepartmentId(channel, departmentId, departments);
+    if (resolved && resolved !== departmentId) setDepartmentId(resolved);
+  }, [detail, channel, departmentId, departments]);
+
+  const coverageQuery = useDepartmentRosterCoverageQuery(id, departmentId, channel, {
+    enabled: gates.view && id.length > 0 && departmentId.trim().length > 0,
+  });
+
+  const internalUsersQuery = useUsersListQuery(
+    { all: true, userType: 'Internal' },
+    { enabled: gates.view && id.length > 0 },
+  );
+  const externalUsersQuery = useUsersListQuery(
+    { all: true, userType: 'External' },
+    { enabled: gates.view && id.length > 0 },
+  );
+
+  const putRoster = usePutDepartmentRosterMutation(id);
+  const putCoverage = usePutDepartmentRosterCoverageMutation(id, departmentId, channel);
+
+  useEffect(() => {
+    const coverage = coverageQuery.data;
+    if (!coverage) return;
+    if (coverage.mode === 'blocks' && coverage.blocks.length > 0) {
+      const blocks = blocksFromCoverage(coverage);
+      setDutyBlocks(blocks);
+      setAssignMode('by_time');
+      setActiveBlockIndex(0);
+      setSlots(blocks[0]?.roster ?? emptySlotDraft());
+      return;
+    }
+    setDutyBlocks(null);
+    setSlots(slotsFromRoster(coverage.legacyRoster));
+  }, [coverageQuery.dataUpdatedAt, departmentId, channel]);
 
   const departmentOptions = useMemo(() => {
-    return (detail?.departmentRoster ?? []).map((d) => ({
+    if (departments.length === 0) {
+      return [{ value: '', label: 'No departments — using website default' }];
+    }
+    return departments.map((d) => ({
       value: d.departmentId,
       label: d.departmentName || d.departmentId,
     }));
-  }, [detail?.departmentRoster]);
+  }, [departments]);
 
-  const allowedChannels = detail?.allowedAssignmentChannels?.length
-    ? detail.allowedAssignmentChannels
-    : (['Internal', 'External'] as ServiceChannel[]);
+  const channelOptions = useMemo(() => {
+    const allowed = detail?.allowedAssignmentChannels?.length
+      ? detail.allowedAssignmentChannels
+      : rosterAssignmentUiChannels(operatingChannels);
+    return allowed.map((c) => ({ value: c, label: c }));
+  }, [detail?.allowedAssignmentChannels, operatingChannels]);
 
-  const openAssign = (dept?: WebsiteDepartmentRosterRow, ch?: ServiceChannel, t?: WebsiteAssignmentTier) => {
-    setDepartmentId(dept?.departmentId ?? departmentOptions[0]?.value ?? '');
-    setChannel(ch ?? allowedChannels[0] ?? 'External');
-    setTier(t ?? 'Primary');
-    setUserId('');
-    setAssignOpen(true);
+  const excludedIds = useMemo(() => {
+    const ex = exclusionsQuery.data;
+    if (!ex) return new Set<string>();
+    return new Set([...ex.chatAgentUserIds, ...ex.qaReviewerUserIds]);
+  }, [exclusionsQuery.data]);
+
+  const userOptions = useMemo(() => {
+    const dept = departmentId.trim() || departments[0]?.departmentId || '';
+    const internal = buildRosterUserOptions(internalUsersQuery.data, dept, 'Internal');
+    const external = buildRosterUserOptions(externalUsersQuery.data, dept, 'External');
+    return [...internal, ...external].map((u) => {
+      if (!excludedIds.has(u.id)) return u;
+      return {
+        ...u,
+        disabled: true,
+        disabledReason: u.disabledReason ?? 'Excluded from this website roster',
+      };
+    });
+  }, [
+    internalUsersQuery.data,
+    externalUsersQuery.data,
+    departmentId,
+    departments,
+    excludedIds,
+  ]);
+
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return userOptions.filter((u) => {
+      if (userFilter !== 'all' && u.userType !== userFilter) return false;
+      if (!q) return true;
+      return (
+        u.name.toLowerCase().includes(q) ||
+        (u.email ?? '').toLowerCase().includes(q) ||
+        (u.department ?? '').toLowerCase().includes(q) ||
+        (u.pool ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [userOptions, userFilter, search]);
+
+  const selectedAgents = useMemo(() => {
+    const byId = new Map(userOptions.map((u) => [u.id, u]));
+    const rows: {
+      id: string;
+      name: string;
+      email?: string;
+      userType: 'Internal' | 'External';
+      department?: string;
+      pool?: string;
+      tier: WebsiteAssignmentTier;
+    }[] = [];
+    const pushTier = (tier: WebsiteAssignmentTier, ids: string[]) => {
+      for (const id of ids) {
+        const u = byId.get(id);
+        rows.push({
+          id: `${tier}-${id}`,
+          name: u?.name ?? id.slice(0, 8),
+          email: u?.email,
+          userType: u?.userType ?? 'Internal',
+          department: u?.department,
+          pool: u?.pool,
+          tier,
+        });
+      }
+    };
+    pushTier('Primary', slots.Primary);
+    if (showSecondary) pushTier('Secondary', slots.Secondary);
+    pushTier('Backup', slots.Backup);
+    return rows;
+  }, [userOptions, slots, showSecondary]);
+
+  const applySlots = (next: SlotDraft) => {
+    setSlots(next);
+    if (assignMode === 'by_time' && dutyBlocks) {
+      setDutyBlocks((prev) => {
+        if (!prev) return prev;
+        return prev.map((b, i) => (i === activeBlockIndex ? { ...b, roster: next } : b));
+      });
+    }
   };
 
-  const saveAssign = async () => {
-    if (!departmentId.trim() || !userId.trim()) {
-      Alert.alert('Validation', 'Select department and user.');
+  const toggleTier = (userId: string, tier: WebsiteAssignmentTier) => {
+    applySlots(
+      (() => {
+        const next = {
+          ...slots,
+          Primary: [...slots.Primary],
+          Secondary: [...slots.Secondary],
+          Backup: [...slots.Backup],
+        };
+        const list = next[tier];
+        const idx = list.indexOf(userId);
+        if (idx >= 0) list.splice(idx, 1);
+        else list.push(userId);
+        return next;
+      })(),
+    );
+  };
+
+  const hasSelection =
+    slots.Primary.length > 0 || slots.Secondary.length > 0 || slots.Backup.length > 0;
+
+  const setupDutyPeriods = () => {
+    const coverage = coverageQuery.data;
+    if (!coverage?.chatServiceHours) {
+      Alert.alert('Service hours', 'Configure service scheduling hours before duty periods.');
+      return;
+    }
+    const existing =
+      coverage.mode === 'blocks' && coverage.blocks.length > 0
+        ? blocksFromCoverage(coverage)
+        : splitServiceHoursIntoBlocks(
+            coverage.chatServiceHours,
+            slotsFromRoster(coverage.legacyRoster),
+          );
+    setDutyBlocks(existing);
+    setActiveBlockIndex(0);
+    setSlots(existing[0]?.roster ?? emptySlotDraft());
+    setAssignMode('by_time');
+  };
+
+  const saveTeam = async () => {
+    if (!departmentId.trim()) {
+      Alert.alert('Validation', 'Select a department first.');
       return;
     }
     try {
-      await assignMutation.mutateAsync({
-        websiteId: id,
-        departmentId: departmentId.trim(),
-        serviceChannel: channel,
-        userId: userId.trim(),
-        assignmentType: tier,
-      });
-      setAssignOpen(false);
-      Alert.alert('Saved', 'Agent assigned to roster slot.');
+      if (assignMode === 'by_time' && dutyBlocks && dutyBlocks.length > 0) {
+        await putCoverage.mutateAsync(blocksToPutPayload(dutyBlocks));
+      } else {
+        const body =
+          channel === 'Internal'
+            ? { internal: draftToChannelBody(slots) }
+            : { external: draftToChannelBody(slots) };
+        await putRoster.mutateAsync({ departmentId: departmentId.trim(), body });
+      }
+      router.replace('/website-assigning' as Href);
     } catch (err) {
-      Alert.alert('Assign failed', extractApiErrorMessage(err));
+      Alert.alert('Save failed', extractApiErrorMessage(err));
     }
   };
 
-  const removeSlot = async (
-    deptId: string,
-    serviceChannel: ServiceChannel,
-    assignmentType: WebsiteAssignmentTier,
-  ) => {
-    const key = `${deptId}:${serviceChannel}:${assignmentType}`;
-    setRemovingKey(key);
-    try {
-      await removeMutation.mutateAsync({
-        websiteId: id,
-        departmentId: deptId,
-        serviceChannel,
-        assignmentType,
-      });
-    } catch (err) {
-      Alert.alert('Remove failed', extractApiErrorMessage(err));
-    } finally {
-      setRemovingKey(null);
-    }
-  };
-
-  const clearAll = async () => {
-    try {
-      await clearAllDepartmentRosters(id);
-      void queryClient.invalidateQueries({ queryKey: websiteAssignmentsKeys.website(id) });
-      void queryClient.invalidateQueries({ queryKey: websiteAssignmentsKeys.all });
-      setClearOpen(false);
-      Alert.alert('Cleared', 'All agent slots cleared.');
-    } catch (err) {
-      Alert.alert('Clear failed', extractApiErrorMessage(err));
-    }
-  };
+  const FLOW_STEPS = [
+    { key: 'website', title: 'Website', subtitle: 'Organization & site', done: true },
+    { key: 'scheduling', title: 'Scheduling', subtitle: 'Service hours', done: true },
+    { key: 'roster', title: 'Agent roster', subtitle: 'Primary / Backup', active: true },
+    { key: 'complete', title: 'Complete', subtitle: 'Ready for chat' },
+  ] as const;
 
   if (!gates.view) {
     return (
@@ -167,476 +348,683 @@ export function WebsiteAssignmentDetailPage({ websiteId }: WebsiteAssignmentDeta
     );
   }
 
+  const hoursLabel = formatHoursLabel(coverageQuery.data?.chatServiceHours);
+  const modeLabel = operatingModeLabel(detail?.operatingChannels);
+  const topicsCount = topicsQuery.data?.topics?.length ?? 0;
+  const exclusionsCount =
+    (exclusionsQuery.data?.chatAgentUserIds.length ?? 0) +
+    (exclusionsQuery.data?.qaReviewerUserIds.length ?? 0);
+  const saving = putRoster.isPending || putCoverage.isPending;
+  const deptLabel =
+    departmentOptions.find((d) => d.value === departmentId)?.label || 'website default';
+
   return (
     <MobileScreen scroll={false} contentStyle={styles.screen}>
       <ScrollView
         contentContainerStyle={[styles.scroll, { gap: theme.spacing.md }]}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={detailQuery.isRefetching && !detailQuery.isLoading}
-            onRefresh={() => void detailQuery.refetch()}
+            onRefresh={() => {
+              void detailQuery.refetch();
+              void coverageQuery.refetch();
+              void topicsQuery.refetch();
+              void internalUsersQuery.refetch();
+              void externalUsersQuery.refetch();
+              void exclusionsQuery.refetch();
+            }}
             tintColor={accent}
           />
-        }
-      >
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.backBtn,
-            {
-              borderColor: theme.app.dashboard.cardBorder,
-              backgroundColor: theme.app.dashboard.overlayLight,
-              opacity: pressed ? 0.88 : 1,
-            },
-          ]}
-        >
-          <Ionicons name="chevron-back" size={18} color={accent} />
-          <Typography variant="small" style={{ fontWeight: '600', color: accent }}>
-            Assignments
-          </Typography>
-        </Pressable>
+        } showsVerticalScrollIndicator={false}>
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() => router.push('/website-assigning' as Href)}
+            style={({ pressed }) => [
+              styles.backBtn,
+              {
+                borderColor: theme.app.dashboard.cardBorder,
+                backgroundColor: theme.app.dashboard.overlayLight,
+                opacity: pressed ? 0.88 : 1,
+              },
+            ]}
+          >
+            <Typography variant="small" style={{ fontWeight: '600' }}>
+              ← All websites
+            </Typography>
+          </Pressable>
+          <Button
+            size="compact"
+            variant="outlined"
+            onPress={() =>
+              router.push(
+                `/website-assigning/website/${encodeURIComponent(id)}/service-scheduling` as Href,
+              )
+            }
+          >
+            Service scheduling
+          </Button>
+        </View>
 
-        <DashboardPageIntro subtitle="Roster, service hours, and inquire topics for this site.">
-          {detailQuery.isLoading && !detail ? (
-            <ActivityIndicator color={accent} />
-          ) : detailQuery.isError ? (
-            <AppCard style={{ gap: 10 }}>
-              <Typography variant="medium" color={theme.app.danger}>
-                {extractApiErrorMessage(detailQuery.error, 'Could not load website.')}
-              </Typography>
-              <Button size="compact" variant="outlined" onPress={() => void detailQuery.refetch()}>
-                Retry
-              </Button>
-            </AppCard>
-          ) : detail ? (
+        <View style={{ gap: 4 }}>
+          <Typography variant="boldLarge">Agent roster</Typography>
+          <Typography variant="medium" muted>
+            Assign Primary, Secondary, and Backup agents by channel and visitor topic.
+          </Typography>
+        </View>
+
+        <View style={styles.stepRow}>
+          {FLOW_STEPS.map((step, index) => {
+            const active = 'active' in step && step.active;
+            const done = 'done' in step && step.done;
+            return (
+              <View
+                key={step.key}
+                style={[
+                  styles.stepCard,
+                  {
+                    borderColor: active ? accent : theme.app.dashboard.cardBorder,
+                    backgroundColor: theme.app.dashboard.overlayLight,
+                    opacity: active || done ? 1 : 0.55,
+                  },
+                  active ? styles.stepCardActive : null,
+                ]}
+              >
+                <View style={styles.stepCardTop}>
+                  <Typography variant="small" muted style={{ fontWeight: '700' }}>
+                    {index + 1}
+                  </Typography>
+                  {done ? (
+                    <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+                  ) : null}
+                </View>
+                <Typography variant="medium" style={{ fontWeight: '700' }} numberOfLines={1}>
+                  {step.title}
+                </Typography>
+                <Typography variant="small" muted numberOfLines={2}>
+                  {step.subtitle}
+                </Typography>
+              </View>
+            );
+          })}
+        </View>
+
+        {detailQuery.isLoading && !detail ? (
+          <ActivityIndicator color={accent} />
+        ) : detailQuery.isError ? (
+          <AppCard style={{ gap: 10 }}>
+            <Typography variant="medium" color={theme.app.danger}>
+              {extractApiErrorMessage(detailQuery.error, 'Could not load website.')}
+            </Typography>
+            <Button size="compact" variant="outlined" onPress={() => void detailQuery.refetch()}>
+              Retry
+            </Button>
+          </AppCard>
+        ) : (
+          <>
             <View
               style={[
-                styles.hero,
+                styles.siteCard,
                 {
                   borderColor: theme.app.dashboard.cardBorder,
                   backgroundColor: theme.app.dashboard.overlayLight,
                 },
               ]}
             >
-              <View style={[styles.heroGlow, { backgroundColor: `${accent}16` }]} />
-              <View style={styles.heroTop}>
-                <View
-                  style={[
-                    styles.heroAvatar,
-                    { backgroundColor: accent, borderColor: `${accent}66` },
-                  ]}
-                >
-                  <Ionicons name="globe-outline" size={22} color="#FFFFFF" />
-                </View>
-                <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
-                  <Typography variant="medium16" style={{ fontWeight: '800' }} numberOfLines={2}>
-                    {title}
-                  </Typography>
-                  {detail.url ? (
-                    <Typography variant="small" muted numberOfLines={1}>
-                      {detail.url}
-                    </Typography>
-                  ) : null}
-                  <Typography variant="small" muted numberOfLines={1}>
-                    {[detail.childCompanyName, detail.parentCompanyName, detail.resellerName]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Typography>
-                </View>
-              </View>
-
-              <View style={styles.chipRow}>
-                <StatusChip
-                  label={
-                    detail.serviceSchedulingConfigured || detail.serviceHoursConfigured
-                      ? 'Hours set'
-                      : 'Hours needed'
-                  }
-                  tone={
-                    detail.serviceSchedulingConfigured || detail.serviceHoursConfigured
-                      ? 'success'
-                      : 'warning'
-                  }
-                />
-                <StatusChip
-                  label={detail.visitorTopicsConfigured ? 'Topics set' : 'Topics needed'}
-                  tone={detail.visitorTopicsConfigured ? 'success' : 'warning'}
-                />
-                <StatusChip
-                  label={
-                    detail.isFullyAssigned ? 'Fully assigned' : `${detail.filledSlots ?? 0} filled`
-                  }
-                  tone={detail.isFullyAssigned ? 'success' : 'info'}
-                />
-              </View>
-
-              <View style={styles.tileRow}>
-                <LinkTile
-                  icon="time-outline"
-                  title="Service hours"
-                  subtitle="Operating windows"
-                  onPress={() =>
-                    router.push(
-                      `/website-assigning/website/${encodeURIComponent(id)}/service-scheduling` as Href,
-                    )
-                  }
-                />
-                <LinkTile
-                  icon="chatbubbles-outline"
-                  title="Inquire topics"
-                  subtitle="Visitor routing"
-                  onPress={() =>
-                    router.push(
-                      `/website-assigning/website/${encodeURIComponent(id)}/inquire-topics` as Href,
-                    )
-                  }
-                />
-              </View>
-
-              {gates.assign ? (
-                <View style={styles.actionRow}>
-                  <Button size="compact" onPress={() => openAssign()}>
-                    Assign agent
-                  </Button>
-                  <Button size="compact" variant="ghost" onPress={() => setClearOpen(true)}>
-                    Clear roster
-                  </Button>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-        </DashboardPageIntro>
-
-        {(detail?.departmentRoster ?? []).map((dept) => (
-          <View
-            key={dept.departmentId}
-            style={[
-              styles.deptCard,
-              {
-                borderColor: theme.app.dashboard.cardBorder,
-                backgroundColor: theme.app.dashboard.overlayLight,
-              },
-            ]}
-          >
-            <View style={styles.deptHeader}>
               <View
                 style={[
-                  styles.deptIcon,
+                  styles.siteIcon,
                   { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
                 ]}
               >
-                <Ionicons name="layers-outline" size={16} color={accent} />
+                <Ionicons name="people-outline" size={18} color={accent} />
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="medium16" style={{ fontWeight: '700' }} numberOfLines={1}>
-                  {dept.departmentName}
+              <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
+                <Typography variant="medium16" style={{ fontWeight: '700' }} numberOfLines={2}>
+                  {detail?.url?.trim() || detail?.name || id.slice(0, 8)}
                 </Typography>
-                <Typography variant="small" muted>
-                  {dept.departmentType}
-                </Typography>
+                <View style={styles.chipRow}>
+                  <View
+                    style={[
+                      styles.chip,
+                      { backgroundColor: `${accent}22`, borderColor: `${accent}55` },
+                    ]}
+                  >
+                    <Typography variant="small" style={{ fontWeight: '700', color: accent }}>
+                      {modeLabel}
+                    </Typography>
+                  </View>
+                  <View
+                    style={[
+                      styles.chip,
+                      { backgroundColor: `${accent}22`, borderColor: `${accent}55` },
+                    ]}
+                  >
+                    <Typography variant="small" style={{ fontWeight: '700', color: accent }}>
+                      {channel}
+                    </Typography>
+                  </View>
+                </View>
               </View>
             </View>
-            {allowedChannels.map((ch) => {
-              const roster = ch === 'Internal' ? dept.roster.internal : dept.roster.external;
-              return (
-                <View key={ch} style={{ gap: 8 }}>
-                  <Typography
-                    variant="small"
-                    style={{ fontWeight: '800', letterSpacing: 0.4 }}
-                    muted
+
+            <View
+              style={[
+                styles.teamShell,
+                {
+                  borderColor: theme.app.dashboard.cardBorder,
+                  backgroundColor: theme.app.dashboard.overlayLight,
+                },
+              ]}
+            >
+              <Typography variant="medium16" style={{ fontWeight: '800' }}>
+                Team assignments
+              </Typography>
+              <Typography variant="small" muted>
+                Choose channel, optional department, then assign agents for Primary / Secondary /
+                Backup.
+              </Typography>
+
+              <View
+                style={[
+                  styles.infoBanner,
+                  { borderColor: `${accent}44`, backgroundColor: `${accent}12` },
+                ]}
+              >
+                <Typography variant="small" muted style={{ flex: 1 }}>
+                  Service scheduling mode ({modeLabel}) controls which assignment channels you can
+                  use here. Visitor topics: {topicsCount}. Roster exclusions: {exclusionsCount}.
+                </Typography>
+              </View>
+
+              <View style={styles.sectionTabs}>
+                {['1. Channel', '2. Department (optional)', '3. Team'].map((label) => (
+                  <View
+                    key={label}
+                    style={[
+                      styles.sectionTab,
+                      { borderColor: accent, backgroundColor: `${accent}22` },
+                    ]}
                   >
-                    {ch.toUpperCase()}
+                    <Typography variant="small" style={{ fontWeight: '700', color: accent }}>
+                      {label}
+                    </Typography>
+                  </View>
+                ))}
+              </View>
+
+              <SelectField
+                label="Assignment channel"
+                value={channel}
+                onChange={(v) => setChannel(v as ServiceChannel)}
+                options={channelOptions}
+                searchable={false}
+ />
+              <SelectField
+                label="Department (optional)"
+                value={departmentId}
+                onChange={setDepartmentId}
+                options={departmentOptions}
+                searchable={false}
+ />
+
+              <View
+                style={[
+                  styles.hoursBox,
+                  {
+                    borderColor: theme.app.dashboard.cardBorder,
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                  },
+                ]}
+              >
+                <Typography variant="small" muted style={{ fontWeight: '700' }}>
+                  Chat service hours
+                </Typography>
+                <Typography variant="small">
+                  {coverageQuery.isLoading ? 'Loading hours…' : hoursLabel}
+                </Typography>
+              </View>
+
+              <Typography variant="medium" style={{ fontWeight: '700' }}>
+                How do you want to assign agents?
+              </Typography>
+              <Pressable
+                onPress={() => {
+                  setAssignMode('same_day');
+                  setDutyBlocks(null);
+                  if (coverageQuery.data?.legacyRoster) {
+                    setSlots(slotsFromRoster(coverageQuery.data.legacyRoster));
+                  }
+                }}
+                style={[
+                  styles.choiceCard,
+                  {
+                    borderColor:
+                      assignMode === 'same_day' ? accent : theme.app.dashboard.cardBorder,
+                    backgroundColor:
+                      assignMode === 'same_day' ? `${accent}14` : 'rgba(255,255,255,0.03)',
+                  },
+                ]}
+              >
+                <Typography variant="small" style={{ fontWeight: '800' }}>
+                  Option A — Same team all day
+                </Typography>
+                <Typography variant="small" muted>
+                  Recommended for small teams. Same Primary / Secondary for the full service window.
+                </Typography>
+              </Pressable>
+              <Pressable
+                onPress={() => setAssignMode('by_time')}
+                style={[
+                  styles.choiceCard,
+                  {
+                    borderColor:
+                      assignMode === 'by_time' ? accent : theme.app.dashboard.cardBorder,
+                    backgroundColor:
+                      assignMode === 'by_time' ? `${accent}14` : 'rgba(255,255,255,0.03)',
+                  },
+                ]}
+              >
+                <Typography variant="small" style={{ fontWeight: '800' }}>
+                  Option B — Different teams by time
+                </Typography>
+                <Typography variant="small" muted>
+                  Split the day into duty periods with different agent sets.
+                </Typography>
+                {assignMode === 'by_time' && !dutyBlocks ? (
+                  <Button size="compact" variant="outlined" onPress={setupDutyPeriods}>
+                    Set up duty periods →
+                  </Button>
+                ) : null}
+              </Pressable>
+
+              {assignMode === 'by_time' && dutyBlocks ? (
+                <View style={{ gap: 8 }}>
+                  <Typography variant="small" muted>
+                    Select a duty period, then assign agents below.
                   </Typography>
-                  {TIERS.map((t) => {
-                    const key = t.toLowerCase() as 'primary' | 'secondary' | 'backup';
-                    const users = roster[key] ?? [];
-                    const removeKey = `${dept.departmentId}:${ch}:${t}`;
-                    const filled = users.length > 0;
+                  {dutyBlocks.map((block, index) => {
+                    const selected = index === activeBlockIndex;
                     return (
-                      <View
-                        key={t}
+                      <Pressable
+                        key={`${block.label}-${index}`}
+                        onPress={() => {
+                          setActiveBlockIndex(index);
+                          setSlots(block.roster);
+                        }}
                         style={[
-                          styles.tierRow,
+                          styles.choiceCard,
                           {
-                            borderColor: filled
-                              ? 'rgba(34, 197, 94, 0.28)'
-                              : theme.app.dashboard.cardBorder,
-                            backgroundColor: filled
-                              ? 'rgba(34, 197, 94, 0.08)'
+                            borderColor: selected ? accent : theme.app.dashboard.cardBorder,
+                            backgroundColor: selected
+                              ? `${accent}14`
                               : 'rgba(255,255,255,0.03)',
                           },
                         ]}
                       >
-                        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                          <Typography variant="small" style={{ fontWeight: '700' }}>
-                            {t}
-                          </Typography>
-                          {filled ? (
-                            users.map((u) => (
-                              <Typography key={u.userId} variant="small" numberOfLines={1}>
-                                {u.name || u.email || u.userId}
-                              </Typography>
-                            ))
-                          ) : (
-                            <Typography variant="small" muted>
-                              Empty slot
-                            </Typography>
-                          )}
-                        </View>
-                        {gates.assign ? (
-                          <View style={styles.tierActions}>
-                            <Pressable
-                              onPress={() => openAssign(dept, ch, t)}
-                              style={[
-                                styles.miniBtn,
-                                {
-                                  backgroundColor: `${accent}18`,
-                                  borderColor: glassUi.border.subtle,
-                                },
-                              ]}
-                            >
-                              <Ionicons name="person-add-outline" size={14} color={accent} />
-                            </Pressable>
-                            {filled ? (
-                              <Pressable
-                                disabled={removingKey === removeKey}
-                                onPress={() => void removeSlot(dept.departmentId, ch, t)}
-                                style={[
-                                  styles.miniBtn,
-                                  {
-                                    backgroundColor: 'rgba(239,68,68,0.12)',
-                                    borderColor: 'rgba(239,68,68,0.28)',
-                                    opacity: removingKey === removeKey ? 0.5 : 1,
-                                  },
-                                ]}
-                              >
-                                <Ionicons name="trash-outline" size={14} color={theme.app.danger} />
-                              </Pressable>
-                            ) : null}
-                          </View>
-                        ) : null}
-                      </View>
+                        <Typography variant="small" style={{ fontWeight: '800' }}>
+                          {block.label || `Period ${index + 1}`}
+                        </Typography>
+                        <Typography variant="small" muted>
+                          {formatCoverageBlockHoursLabel(block)}
+                        </Typography>
+                      </Pressable>
                     );
                   })}
                 </View>
-              );
-            })}
-          </View>
-        ))}
+              ) : null}
 
-        {detail && (detail.departmentRoster?.length ?? 0) === 0 ? (
-          <View
-            style={[
-              styles.emptyRoster,
-              {
-                borderColor: theme.app.dashboard.cardBorder,
-                backgroundColor: theme.app.dashboard.overlayLight,
-              },
-            ]}
-          >
-            <Ionicons name="people-outline" size={28} color={accent} />
-            <Typography variant="medium16" style={{ fontWeight: '700', textAlign: 'center' }}>
-              No department rosters yet
-            </Typography>
-            <Typography variant="small" muted style={{ textAlign: 'center' }}>
-              Configure inquire topics first, then assign agents to Primary / Secondary / Backup.
-            </Typography>
-          </View>
-        ) : null}
+              {assignMode === 'same_day' || dutyBlocks ? (
+                <>
+                  <View style={styles.chipRow}>
+                    <View style={[styles.metaChip, { borderColor: glassUi.border.subtle }]}>
+                      <Typography variant="small">{channel}</Typography>
+                    </View>
+                    <View style={[styles.metaChip, { borderColor: glassUi.border.subtle }]}>
+                      <Typography variant="small">Dept: {deptLabel}</Typography>
+                    </View>
+                    {operatingChannels === 'both' ? (
+                      <View style={[styles.metaChip, { borderColor: glassUi.border.subtle }]}>
+                        <Typography variant="small">External allowed for Backup</Typography>
+                      </View>
+                    ) : null}
+                    <View style={[styles.metaChip, { borderColor: glassUi.border.subtle }]}>
+                      <Typography variant="small">
+                        {filteredUsers.length} eligible users
+                      </Typography>
+                    </View>
+                  </View>
+
+                  <View style={styles.filterRow}>
+                    {(['all', 'Internal', 'External'] as const).map((f) => {
+                      const selected = userFilter === f;
+                      return (
+                        <Pressable
+                          key={f}
+                          onPress={() => setUserFilter(f)}
+                          style={[
+                            styles.filterChip,
+                            {
+                              borderColor: selected ? accent : theme.app.dashboard.cardBorder,
+                              backgroundColor: selected ? `${accent}22` : 'transparent',
+                            },
+                          ]}
+                        >
+                          <Typography
+                            variant="small"
+                            style={{ fontWeight: selected ? '700' : '500' }}
+                            color={selected ? accent : theme.app.text.secondary}
+                          >
+                            {f === 'all' ? 'All users' : f}
+                          </Typography>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <SearchBar
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Search users…"
+ />
+
+                  <View style={{ gap: 8 }}>
+                    {filteredUsers.length === 0 ? (
+                      <Typography variant="small" muted>
+                        No users match this filter.
+                      </Typography>
+                    ) : (
+                      filteredUsers.map((u) => {
+                        const primary = slots.Primary.includes(u.id);
+                        const secondary = slots.Secondary.includes(u.id);
+                        const backup = slots.Backup.includes(u.id);
+                        return (
+                          <View
+                            key={u.id}
+                            style={[
+                              styles.userRow,
+                              {
+                                borderColor: theme.app.dashboard.cardBorder,
+                                backgroundColor: 'rgba(255,255,255,0.03)',
+                                opacity: u.disabled ? 0.55 : 1,
+                              },
+                            ]}
+                          >
+                            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                              <Typography
+                                variant="medium"
+                                style={{ fontWeight: '700' }}
+                                numberOfLines={1}
+                              >
+                                {u.name}
+                              </Typography>
+                              <Typography variant="small" muted numberOfLines={1}>
+                                {u.email || '—'}
+                              </Typography>
+                              <Typography variant="small" muted numberOfLines={2}>
+                                {[
+                                  `Type: ${u.userType}`,
+                                  `Department: ${u.department || '—'}`,
+                                  `Pool: ${u.pool || '—'}`,
+                                ].join(' · ')}
+                              </Typography>
+                              {u.disabledReason ? (
+                                <Typography variant="small" color={theme.app.danger}>
+                                  {u.disabledReason}
+                                </Typography>
+                              ) : null}
+                            </View>
+                            <View style={styles.tierChecks}>
+                              <Checkbox
+                                checked={primary}
+                                disabled={!gates.assign || u.disabled}
+                                label="P"
+                                onChange={() => toggleTier(u.id, 'Primary')}
+ />
+                              {showSecondary ? (
+                                <Checkbox
+                                  checked={secondary}
+                                  disabled={!gates.assign || u.disabled}
+                                  label="S"
+                                  onChange={() => toggleTier(u.id, 'Secondary')}
+ />
+                              ) : null}
+                              <Checkbox
+                                checked={backup}
+                                disabled={!gates.assign || u.disabled}
+                                label="B"
+                                onChange={() => toggleTier(u.id, 'Backup')}
+ />
+                            </View>
+                          </View>
+                        );
+                      })
+                    )}
+                  </View>
+
+                  {selectedAgents.length > 0 ? (
+                    <View style={{ gap: 10 }}>
+                      <Typography variant="medium" style={{ fontWeight: '800' }}>
+                        Selected agents ({selectedAgents.length})
+                      </Typography>
+                      {selectedAgents.map((row) => {
+                        const badge = TIER_BADGE[row.tier];
+                        return (
+                          <View
+                            key={row.id}
+                            style={[
+                              styles.selectedRow,
+                              {
+                                borderColor: theme.app.dashboard.cardBorder,
+                                backgroundColor: 'rgba(255,255,255,0.03)',
+                              },
+                            ]}
+                          >
+                            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                              <Typography
+                                variant="medium"
+                                style={{ fontWeight: '700' }}
+                                numberOfLines={1}
+                              >
+                                {row.name}
+                              </Typography>
+                              <Typography variant="small" muted numberOfLines={1}>
+                                {row.email || '—'}
+                              </Typography>
+                              <View style={styles.chipRow}>
+                                <View
+                                  style={[
+                                    styles.typeChip,
+                                    {
+                                      backgroundColor: `${accent}22`,
+                                      borderColor: `${accent}55`,
+                                    },
+                                  ]}
+                                >
+                                  <Typography
+                                    variant="small"
+                                    style={{ fontWeight: '700', color: accent }}
+                                  >
+                                    {row.userType}
+                                  </Typography>
+                                </View>
+                                <Typography variant="small" muted numberOfLines={1}>
+                                  {[row.department || '—', row.pool || '—'].join(' · ')}
+                                </Typography>
+                              </View>
+                            </View>
+                            <View
+                              style={[
+                                styles.tierBadge,
+                                {
+                                  backgroundColor: badge.bg,
+                                  borderColor: badge.border,
+                                },
+                              ]}
+                            >
+                              <Typography
+                                variant="small"
+                                style={{ fontWeight: '800', color: badge.color }}
+                              >
+                                {row.tier}
+                              </Typography>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+
+                  {gates.assign ? (
+                    <Button
+                      onPress={() => void saveTeam()}
+                      disabled={!hasSelection || saving || !departmentId.trim()}
+                    >
+                      {saving
+                        ? 'Saving…'
+                        : assignMode === 'by_time'
+                          ? 'Save duty periods'
+                          : 'Save team (full day)'}
+                    </Button>
+                  ) : null}
+                </>
+              ) : (
+                <Typography variant="small" muted>
+                  Tap “Set up duty periods →” to split the service window into blocks.
+                </Typography>
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
-
-      <FormModal
-        open={assignOpen}
-        title="Assign agent"
-        description="Place a user into a Primary / Secondary / Backup slot."
-        onClose={() => setAssignOpen(false)}
-        onSave={() => void saveAssign()}
-        primaryButtonLabel={assignMutation.isPending ? 'Saving…' : 'Assign'}
-        primaryButtonDisabled={assignMutation.isPending || !userId.trim() || !departmentId.trim()}
-      >
-        <SelectField
-          label="Department"
-          value={departmentId}
-          onChange={setDepartmentId}
-          options={departmentOptions}
-        />
-        <SelectField
-          label="Channel"
-          value={channel}
-          onChange={(v) => setChannel(v as ServiceChannel)}
-          options={allowedChannels.map((c) => ({ value: c, label: c }))}
-          searchable={false}
-        />
-        <SelectField
-          label="Tier"
-          value={tier}
-          onChange={(v) => setTier(v as WebsiteAssignmentTier)}
-          options={TIERS.map((t) => ({ value: t, label: t }))}
-          searchable={false}
-        />
-        <SelectField
-          label="User"
-          value={userId}
-          onChange={setUserId}
-          options={userOptions}
-          placeholder="Search users…"
-        />
-      </FormModal>
-
-      <ConfirmActionModal
-        open={clearOpen}
-        title="Clear entire roster?"
-        description="Removes every agent slot on this website."
-        confirmLabel="Clear"
-        confirmButtonVariant="danger"
-        onDismiss={() => setClearOpen(false)}
-        onConfirm={() => void clearAll()}
-      />
     </MobileScreen>
   );
 }
 
-function LinkTile({
-  icon,
-  title,
-  subtitle,
-  onPress,
-}: {
-  icon: ComponentProps<typeof Ionicons>['name'];
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-}) {
-  const theme = useAppTheme();
-  const accent = theme.app.dashboard.accentBlue;
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.linkTile,
-        {
-          borderColor: theme.app.dashboard.cardBorder,
-          backgroundColor: 'rgba(255,255,255,0.04)',
-          opacity: pressed ? 0.9 : 1,
-        },
-      ]}
-    >
-      <View
-        style={[
-          styles.linkIcon,
-          { backgroundColor: `${accent}22`, borderColor: glassUi.border.subtle },
-        ]}
-      >
-        <Ionicons name={icon} size={18} color={accent} />
-      </View>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="small" style={{ fontWeight: '700' }} numberOfLines={1}>
-          {title}
-        </Typography>
-        <Typography variant="small" muted numberOfLines={1}>
-          {subtitle}
-        </Typography>
-      </View>
-      <Ionicons name="chevron-forward" size={14} color={theme.app.text.secondary} />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  scroll: { paddingBottom: 36 },
-  backBtn: {
-    alignSelf: 'flex-start',
+  screen: { flex: 1, paddingHorizontal: 8 },
+  scroll: { paddingTop: 4, paddingBottom: 40 },
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  backBtn: {
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
   },
-  hero: {
-    position: 'relative',
-    overflow: 'hidden',
+  stepRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  stepCard: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    minWidth: 140,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 12,
+    gap: 2,
+  },
+  stepCardActive: { borderWidth: 2 },
+  stepCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  siteCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    padding: 16,
-    borderRadius: 20,
+    borderRadius: 14,
     borderWidth: 1,
+    padding: 14,
   },
-  heroGlow: {
-    position: 'absolute',
-    top: -40,
-    right: -20,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-  },
-  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  heroAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+  siteIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tileRow: { gap: 8 },
-  linkTile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: 14,
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     borderWidth: 1,
   },
-  linkIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
+  teamShell: {
+    borderRadius: 16,
     borderWidth: 1,
-  },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  deptCard: {
-    borderWidth: 1,
-    borderRadius: 18,
     padding: 14,
     gap: 12,
   },
-  deptHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  deptIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
+  infoBanner: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  sectionTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  sectionTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
+  hoursBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    gap: 4,
+  },
+  choiceCard: {
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 12,
+    gap: 4,
+  },
+  metaChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     borderWidth: 1,
   },
-  tierRow: {
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  tierChecks: { gap: 4, alignItems: 'flex-start' },
+  selectedRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 12,
-    borderRadius: 14,
+  },
+  typeChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
     borderWidth: 1,
   },
-  tierActions: { flexDirection: 'row', gap: 6 },
-  miniBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
+  tierBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
     borderWidth: 1,
-  },
-  emptyRoster: {
-    alignItems: 'center',
-    gap: 10,
-    padding: 28,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderStyle: 'dashed',
   },
 });

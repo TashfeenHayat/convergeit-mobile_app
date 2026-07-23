@@ -1,62 +1,79 @@
-import type { DrawerContentComponentProps } from '@react-navigation/drawer';
-import type { ComponentProps } from 'react';
-import { useEffect, useState } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Redirect, usePathname, useRouter, type Href } from 'expo-router';
-import { Drawer } from 'expo-router/drawer';
-import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import type { DrawerContentComponentProps } from "@react-navigation/drawer";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { Redirect, usePathname, useRouter, type Href } from "expo-router";
+import { Drawer } from "expo-router/drawer";
+import type { ComponentProps } from "react";
+import { useEffect, useState } from "react";
+import {
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AgentDashboardProviders } from '@/components/notifications/AgentDashboardProviders';
-import { DashboardChromeProvider } from '@/components/layout/DashboardChromeContext';
-import { DashboardGlassHeader } from '@/components/layout/dashboard/DashboardHeader/DashboardGlassHeader';
-import { LiquidGlass, Typography } from '@/components/ui';
-import { SplashScreen } from '@/components/ui/SplashScreen';
-import { AUTH_PATHS, mobilePathToWeb, webHrefToMobile } from '@/constants/navigation';
-import { titleForHref } from '@/constants/web-route-registry';
-import { glassUi } from '@/lib/theme/glass-ui';
-import { useAuth } from '@/lib/auth';
-import { useDashboardSidebarNavItems } from '@/lib/hooks/useDashboardSidebarNavItems';
-import type { DashboardNavItem, DashboardSidebarIconKey } from '@/lib/permissions/dashboard-nav.types';
-import { tokens } from '@/theme';
+import { DashboardChromeProvider } from "@/components/layout/DashboardChromeContext";
+import { DashboardGlassHeader } from "@/components/layout/dashboard/DashboardHeader/DashboardGlassHeader";
+import { AgentDashboardProviders } from "@/components/notifications/AgentDashboardProviders";
+import { LiquidGlass, Typography } from "@/components/ui";
+import { SplashScreen } from "@/components/ui/SplashScreen";
+import {
+    AUTH_PATHS,
+    mobilePathToWeb,
+    webHrefToMobile,
+} from "@/constants/navigation";
+import { titleForHref } from "@/constants/web-route-registry";
+import { useAuth } from "@/lib/auth";
+import { useDashboardSidebarNavItems } from "@/lib/hooks/useDashboardSidebarNavItems";
+import type {
+    DashboardNavItem,
+    DashboardSidebarIconKey,
+} from "@/lib/permissions/dashboard-nav.types";
+import { glassUi } from "@/lib/theme/glass-ui";
+import { hexAlpha } from "@/lib/theme/use-theme-colors";
+import { useAppTheme } from "@/theme";
 
-const iconMap: Record<DashboardSidebarIconKey, ComponentProps<typeof FontAwesome>['name']> = {
-  accountSetup: 'wrench',
-  billing: 'credit-card',
-  chat: 'comments',
-  chatWidget: 'comment',
-  aiTraining: 'magic',
-  clients: 'building',
-  'Reseller-Management': 'briefcase',
-  crmIntegration: 'plug',
-  dashboard: 'home',
-  departments: 'sitemap',
-  designations: 'id-badge',
-  distributionSetup: 'share-alt',
-  hrms: 'calendar',
-  ipBlocklist: 'ban',
-  licenses: 'key',
-  leave: 'plane',
-  pools: 'users',
-  reports: 'file-text',
-  resellers: 'briefcase',
-  roles: 'shield',
-  settings: 'cog',
-  shifts: 'clock-o',
-  profile: 'user',
-  theme: 'paint-brush',
-  smtpEmail: 'envelope',
-  socialMedia: 'share-alt',
-  users: 'user',
-  websiteAssignments: 'globe',
+const iconMap: Record<
+  DashboardSidebarIconKey,
+  ComponentProps<typeof FontAwesome>["name"]
+> = {
+  accountSetup: "wrench",
+  billing: "credit-card",
+  chat: "comments",
+  chatWidget: "comment",
+  aiTraining: "magic",
+  clients: "building",
+  "Reseller-Management": "briefcase",
+  crmIntegration: "plug",
+  dashboard: "home",
+  departments: "sitemap",
+  designations: "id-badge",
+  distributionSetup: "share-alt",
+  hrms: "calendar",
+  ipBlocklist: "ban",
+  licenses: "key",
+  leave: "plane",
+  pools: "users",
+  reports: "file-text",
+  resellers: "briefcase",
+  roles: "shield",
+  settings: "cog",
+  shifts: "clock-o",
+  profile: "user",
+  theme: "paint-brush",
+  smtpEmail: "envelope",
+  socialMedia: "share-alt",
+  users: "user",
+  websiteAssignments: "globe",
 };
 
 function isNavActive(pathname: string, item: DashboardNavItem): boolean {
   const webPath = mobilePathToWeb(pathname);
-  const href = item.href.replace(/\/+$/, '');
+  const href = item.href.replace(/\/+$/, "");
   if (webPath === href) return true;
   if (item.pathIncludes && webPath.includes(item.pathIncludes)) return true;
   if (item.prefixMatch) {
@@ -81,36 +98,67 @@ function NavRow({
   onToggle: (key: string) => void;
   onNavigate: (href: string) => void;
 }) {
+  const theme = useAppTheme();
+  const isLight = theme.paletteMode === "light";
+  const accent = theme.app.dashboard.accentBlue;
+  const textPrimary = theme.app.text.primary;
+  const textMuted = theme.app.dashboard.textMuted;
+  const iconMuted = isLight
+    ? theme.app.dashboard.iconMuted
+    : (theme.app.dashboard.sidebarNavIconMuted ??
+      theme.app.dashboard.iconMuted);
+  /** Web `navItemSx`: alpha(primary, dark 0.22 / light 0.14) */
+  const navActiveBg = hexAlpha(accent, isLight ? 0.14 : 0.22);
+
   const hasChildren = Boolean(item.children?.length);
   const key = item.href;
   const open = expanded.has(key);
   const active = isNavActive(pathname, item);
-  const childActive = item.children?.some((c) => isNavActive(pathname, c)) ?? false;
-  const highlight = active || (hasChildren && childActive && !open);
+  const childActive =
+    item.children?.some((c) => isNavActive(pathname, c)) ?? false;
+  /** Parent groups only show selected chrome when collapsed (child route active). */
+  const highlight = hasChildren ? childActive && !open : active;
+
+  const iconColor = highlight ? accent : iconMuted;
+  const labelColor = highlight ? textPrimary : textMuted;
+  const chevronColor = isLight
+    ? "rgba(15, 23, 42, 0.45)"
+    : "rgba(255,255,255,0.45)";
 
   const rowContent = (
     <>
-      <View style={[styles.navIconWrap, highlight && styles.navIconWrapActive]}>
+      <View
+        style={[
+          styles.navIconWrap,
+          {
+            backgroundColor: highlight
+              ? hexAlpha(accent, isLight ? 0.15 : 0.25)
+              : isLight
+                ? "rgba(15, 23, 42, 0.06)"
+                : "rgba(255,255,255,0.08)",
+          },
+        ]}
+      >
         <FontAwesome
-          name={iconMap[item.iconKey] ?? 'circle'}
+          name={iconMap[item.iconKey] ?? "circle"}
           size={depth === 0 ? 15 : 13}
-          color={highlight ? '#FFFFFF' : 'rgba(255,255,255,0.72)'}
-        />
+          color={iconColor}
+ />
       </View>
       <Typography
-        variant={depth === 0 ? 'medium' : 'small'}
-        color={highlight ? tokens.colors.textPrimary : tokens.colors.textSecondary}
-        style={[styles.navLabel, highlight && { fontWeight: '700' }]}
+        variant={depth === 0 ? "medium" : "small"}
+        color={labelColor}
+        style={[styles.navLabel, highlight && { fontWeight: "700" }]}
         numberOfLines={1}
       >
         {item.label}
       </Typography>
       {hasChildren ? (
         <Ionicons
-          name={open ? 'chevron-down' : 'chevron-forward'}
+          name={open ? "chevron-down" : "chevron-forward"}
           size={14}
-          color="rgba(255,255,255,0.45)"
-        />
+          color={chevronColor}
+ />
       ) : null}
     </>
   );
@@ -121,7 +169,6 @@ function NavRow({
         onPress={() => {
           if (hasChildren) {
             onToggle(key);
-            onNavigate(webHrefToMobile(item.href));
             return;
           }
           onNavigate(webHrefToMobile(item.href));
@@ -132,7 +179,14 @@ function NavRow({
           style={[
             styles.navItem,
             { paddingLeft: 14 + depth * 14 },
-            highlight && styles.navItemActive,
+            highlight && {
+              backgroundColor: navActiveBg,
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+              borderTopRightRadius: 22,
+              borderBottomRightRadius: 22,
+              marginLeft: 2,
+            },
           ]}
         >
           {rowContent}
@@ -148,7 +202,7 @@ function NavRow({
               expanded={expanded}
               onToggle={onToggle}
               onNavigate={onNavigate}
-            />
+ />
           ))
         : null}
     </View>
@@ -159,9 +213,38 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const theme = useAppTheme();
   const { user, logout } = useAuth();
   const activityItems = useDashboardSidebarNavItems();
   const navItems = activityItems;
+
+  const isLight = theme.paletteMode === "light";
+  const sidebarBg = theme.app.dashboard.sidebarBg;
+  const accent = theme.app.dashboard.accentBlue;
+  const textPrimary = theme.app.text.primary;
+  const textMuted = theme.app.dashboard.textMuted;
+  const edgeBorder = isLight
+    ? "rgba(15, 23, 42, 0.10)"
+    : "rgba(255,255,255,0.10)";
+  const statusDotBorder = sidebarBg;
+  /**
+   * Web `sidebarInnerSx`:
+   * backgroundColor rgba(8,12,22,0.34) + linear-gradient(white sheen) over sidebarBg
+   */
+  const sidebarBase = isLight
+    ? "rgba(255, 255, 255, 0.3)"
+    : "rgba(8, 12, 22, 0.34)";
+  const sheenColors = isLight
+    ? ([
+        "rgba(255,255,255,0.55)",
+        "rgba(255,255,255,0.18)",
+        "transparent",
+      ] as const)
+    : ([
+        "rgba(255,255,255,0.12)",
+        "rgba(255,255,255,0.02)",
+        "transparent",
+      ] as const);
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
@@ -170,7 +253,10 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
       const next = new Set(prev);
       let changed = false;
       for (const item of navItems) {
-        if (item.children?.some((c) => isNavActive(pathname, c)) && !next.has(item.href)) {
+        if (
+          item.children?.some((c) => isNavActive(pathname, c)) &&
+          !next.has(item.href)
+        ) {
           next.add(item.href);
           changed = true;
         }
@@ -199,44 +285,98 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
   };
 
   const displayName =
-    [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'Account';
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.email ||
+    "Account";
   const initials =
-    [user?.firstName?.[0], user?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
+    [user?.firstName?.[0], user?.lastName?.[0]]
+      .filter(Boolean)
+      .join("")
+      .toUpperCase() ||
     user?.email?.[0]?.toUpperCase() ||
-    'U';
+    "U";
 
   return (
-    <View style={[styles.drawer, { paddingTop: Math.max(insets.top, 12) }]}>
-      {Platform.OS === 'ios' ? (
-        <BlurView intensity={72} tint="dark" style={StyleSheet.absoluteFillObject} />
+    <View
+      style={[
+        styles.drawer,
+        {
+          paddingTop: Math.max(insets.top, 12),
+          backgroundColor: sidebarBg,
+          borderRightColor: edgeBorder,
+        },
+      ]}
+    >
+      {Platform.OS === "ios" ? (
+        <BlurView
+          intensity={isLight ? 48 : 72}
+          tint={isLight ? "light" : "dark"}
+          style={StyleSheet.absoluteFillObject}
+ />
       ) : null}
-      <LinearGradient colors={[...glassUi.gradient.sidebar]} style={StyleSheet.absoluteFillObject} />
+      {/* Web: rgba glass base over sidebarBg */}
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          { backgroundColor: sidebarBase },
+        ]}
+ />
       <LinearGradient
-        colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.03)', 'transparent']}
-        locations={[0, 0.28, 0.7]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={[...sheenColors]}
+        locations={[0, 0.45, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
-      />
-      <View pointerEvents="none" style={styles.drawerEdge} />
+ />
+      <View
+        pointerEvents="none"
+        style={[styles.drawerEdge, { borderRightColor: edgeBorder }]}
+ />
 
       <View style={styles.profileHeader}>
         <View style={styles.profileLeft}>
-          <LiquidGlass intensity="medium" radius={glassUi.radius.pill} elevated contentStyle={styles.avatarGlass}>
-            <View style={styles.avatar}>
-              <Typography variant="medium16" style={{ fontWeight: '700' }}>
+          <LiquidGlass
+            intensity="medium"
+            radius={glassUi.radius.pill}
+            elevated
+            contentStyle={styles.avatarGlass}
+          >
+            <View
+              style={[
+                styles.avatar,
+                {
+                  backgroundColor: `${accent}${isLight ? "38" : "60"}`,
+                  borderColor: isLight
+                    ? "rgba(15, 23, 42, 0.12)"
+                    : "rgba(255,255,255,0.28)",
+                },
+              ]}
+            >
+              <Typography
+                variant="medium16"
+                color={textPrimary}
+                style={{ fontWeight: "700" }}
+              >
                 {initials}
               </Typography>
-              <View style={styles.statusDot} />
+              <View
+                style={[styles.statusDot, { borderColor: statusDotBorder }]}
+ />
             </View>
           </LiquidGlass>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="medium16" style={{ fontWeight: '700' }} numberOfLines={1}>
+            <Typography
+              variant="medium16"
+              color={textPrimary}
+              style={{ fontWeight: "700" }}
+              numberOfLines={1}
+            >
               {displayName}
             </Typography>
             {user?.email ? (
-              <Typography variant="small" muted numberOfLines={1}>
+              <Typography variant="small" color={textMuted} numberOfLines={1}>
                 {user.email}
               </Typography>
             ) : null}
@@ -247,23 +387,45 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
           style={({ pressed }) => [pressed && styles.navPressed]}
           accessibilityLabel="Close menu"
         >
-          <LiquidGlass intensity="subtle" radius={12} elevated contentStyle={styles.closeBtn}>
-            <Ionicons name="close" size={20} color={tokens.colors.textPrimary} />
+          <LiquidGlass
+            intensity="subtle"
+            radius={12}
+            elevated
+            contentStyle={styles.closeBtn}
+          >
+            <Ionicons name="close" size={20} color={textPrimary} />
           </LiquidGlass>
         </Pressable>
       </View>
 
-      <LiquidGlass intensity="subtle" radius={glassUi.radius.md} elevated style={styles.workspaceCard} contentStyle={styles.workspaceInner}>
-        <Ionicons name="business-outline" size={16} color="#A78BFA" />
-        <Typography variant="medium" style={{ flex: 1, fontWeight: '600' }} numberOfLines={1}>
+      <LiquidGlass
+        intensity="subtle"
+        radius={glassUi.radius.md}
+        elevated
+        style={styles.workspaceCard}
+        contentStyle={styles.workspaceInner}
+      >
+        <Ionicons name="business-outline" size={16} color={accent} />
+        <Typography
+          variant="medium"
+          color={textPrimary}
+          style={{ flex: 1, fontWeight: "600" }}
+          numberOfLines={1}
+        >
           ConvergeIT Workspace
         </Typography>
-        <Ionicons name="chevron-down" size={16} color={tokens.colors.textMuted} />
+        <Ionicons name="chevron-down" size={16} color={textMuted} />
       </LiquidGlass>
 
-      <LiquidGlass intensity="medium" radius={glassUi.radius.lg} elevated style={styles.menuShell} contentStyle={styles.menuShellInner}>
-        <Typography variant="small" muted style={styles.menuLabel}>
-          MENU
+      <LiquidGlass
+        intensity="medium"
+        radius={glassUi.radius.lg}
+        elevated
+        style={styles.menuShell}
+        contentStyle={styles.menuShellInner}
+      >
+        <Typography variant="small" color={textMuted} style={styles.menuLabel}>
+          ACTIVITY
         </Typography>
 
         <ScrollView
@@ -273,7 +435,11 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
           keyboardShouldPersistTaps="handled"
         >
           {navItems.length === 0 ? (
-            <Typography variant="small" muted style={styles.emptyMenu}>
+            <Typography
+              variant="small"
+              color={textMuted}
+              style={styles.emptyMenu}
+            >
               No modules available for your role yet.
             </Typography>
           ) : (
@@ -286,16 +452,27 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
                 expanded={expanded}
                 onToggle={onToggle}
                 onNavigate={onNavigate}
-              />
+ />
             ))
           )}
         </ScrollView>
       </LiquidGlass>
 
-      <Pressable onPress={onLogout} style={({ pressed }) => [styles.logout, pressed && styles.navPressed]}>
-        <LiquidGlass intensity="subtle" radius={glassUi.radius.md} elevated contentStyle={styles.logoutInner}>
+      <Pressable
+        onPress={onLogout}
+        style={({ pressed }) => [styles.logout, pressed && styles.navPressed]}
+      >
+        <LiquidGlass
+          intensity="subtle"
+          radius={glassUi.radius.md}
+          elevated
+          contentStyle={styles.logoutInner}
+        >
           <Ionicons name="log-out-outline" size={18} color="#F87171" />
-          <Typography variant="medium" style={{ fontWeight: '600', color: '#F87171' }}>
+          <Typography
+            variant="medium"
+            style={{ fontWeight: "600", color: "#F87171" }}
+          >
             Log out
           </Typography>
         </LiquidGlass>
@@ -305,21 +482,23 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
 }
 
 function titleFromRouteName(name: string): string {
-  if (name === 'home') return 'Dashboard';
-  const href = `/${name.replace(/\/index$/, '')}`;
+  if (name === "home") return "Dashboard";
+  const href = `/${name.replace(/\/index$/, "")}`;
   return (
     titleForHref(href) ??
     name
-      .split('/')
-      .filter((p) => !p.startsWith('['))
+      .split("/")
+      .filter((p) => !p.startsWith("["))
       .pop()
-      ?.replace(/-/g, ' ') ??
-    'ConvergeIT'
+      ?.replace(/-/g, " ") ??
+    "ConvergeIT"
   );
 }
 
 export default function DashboardLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const theme = useAppTheme();
+  const isLight = theme.paletteMode === "light";
 
   if (isLoading) {
     return <SplashScreen message="Restoring session…" />;
@@ -333,27 +512,34 @@ export default function DashboardLayout() {
     <AgentDashboardProviders>
       <DashboardChromeProvider>
         <Drawer
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
-        screenOptions={({ route, navigation }) => ({
-        header: (props) => <DashboardGlassHeader navigation={navigation} options={props.options} />,
-        headerTransparent: true,
-        headerStyle: {
-          backgroundColor: 'transparent',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTintColor: tokens.colors.textPrimary,
-        headerTitleStyle: { fontWeight: '700', fontSize: 17 },
-        drawerStyle: {
-          backgroundColor: 'transparent',
-          width: 312,
-        },
-        drawerType: 'front',
-        overlayColor: 'rgba(6, 8, 22, 0.38)',
-        drawerItemStyle: { display: 'none' },
-        title: titleFromRouteName(route.name),
-      })}
-        />
+          drawerContent={(props) => <CustomDrawerContent {...props} />}
+          screenOptions={({ route, navigation }) => ({
+            header: (props) => (
+              <DashboardGlassHeader
+                navigation={navigation}
+                options={props.options}
+ />
+            ),
+            headerTransparent: true,
+            headerStyle: {
+              backgroundColor: "transparent",
+              elevation: 0,
+              shadowOpacity: 0,
+            },
+            headerTintColor: theme.app.text.primary,
+            headerTitleStyle: { fontWeight: "700", fontSize: 17 },
+            drawerStyle: {
+              backgroundColor: "transparent",
+              width: 312,
+            },
+            drawerType: "front",
+            overlayColor: isLight
+              ? "rgba(15, 23, 42, 0.28)"
+              : "rgba(6, 8, 22, 0.38)",
+            drawerItemStyle: { display: "none" },
+            title: titleFromRouteName(route.name),
+          })}
+ />
       </DashboardChromeProvider>
     </AgentDashboardProviders>
   );
@@ -364,28 +550,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 12,
     paddingHorizontal: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRightWidth: StyleSheet.hairlineWidth * 2,
-    borderRightColor: 'rgba(255,255,255,0.22)',
-    backgroundColor: '#12142a',
   },
   drawerEdge: {
     ...StyleSheet.absoluteFillObject,
     borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.16)',
   },
   profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 10,
     marginHorizontal: 4,
     marginBottom: 12,
     marginTop: 4,
   },
   profileLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     flex: 1,
     minWidth: 0,
@@ -393,16 +576,16 @@ const styles = StyleSheet.create({
   closeBtn: {
     width: 36,
     height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   workspaceCard: {
     marginHorizontal: 4,
     marginBottom: 12,
   },
   workspaceInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 12,
     paddingHorizontal: 14,
@@ -410,29 +593,26 @@ const styles = StyleSheet.create({
   avatarGlass: {
     width: 54,
     height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatar: {
     width: 46,
     height: 46,
     borderRadius: 23,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(110, 142, 251, 0.38)',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.28)',
   },
   statusDot: {
-    position: 'absolute',
+    position: "absolute",
     right: 1,
     bottom: 1,
     width: 11,
     height: 11,
     borderRadius: 6,
-    backgroundColor: '#22C55E',
+    backgroundColor: "#22C55E",
     borderWidth: 2,
-    borderColor: '#141833',
   },
   menuShell: {
     flex: 1,
@@ -448,7 +628,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginHorizontal: 14,
     letterSpacing: 1.4,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 11,
   },
   navList: {
@@ -466,28 +646,19 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 11,
     paddingRight: 12,
     borderRadius: 14,
   },
-  navItemActive: {
-    backgroundColor: glassUi.fill.activeNav,
-    borderWidth: 1,
-    borderColor: glassUi.border.subtle,
-  },
   navIconWrap: {
     width: 34,
     height: 34,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  navIconWrapActive: {
-    backgroundColor: 'rgba(110, 142, 251, 0.55)',
+    alignItems: "center",
+    justifyContent: "center",
   },
   navLabel: {
     flex: 1,
@@ -500,8 +671,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   logoutInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 14,
     paddingHorizontal: 16,

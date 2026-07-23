@@ -162,7 +162,7 @@ export function GenerateReportsPage() {
           onChange={(v) => setReportType(v as ReportType)}
           options={REPORT_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
           searchable={false}
-        />
+ />
       </View>
 
       {active.isLoading ? (
@@ -207,7 +207,7 @@ export function GenerateReportsPage() {
               ) : null}
             </AppCard>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );

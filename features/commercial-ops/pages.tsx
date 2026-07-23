@@ -36,7 +36,7 @@ export function BillingInvoicesListPage() {
         const { data } = await apiClient.post('/billing/invoices', body);
         return data;
       }}
-    />
+ />
   );
 }
 
@@ -50,7 +50,7 @@ export function PaymentHistoryListPage() {
       queryKey={['billing', 'invoices', 'payments']}
       queryFn={async (params) => listInvoices(params)}
       columnIds={['invoiceNumber', 'companyName', 'status', 'paidDate', 'totalAmount']}
-    />
+ />
   );
 }
 
@@ -63,7 +63,7 @@ export function ResellerSubscriptionsListPage() {
       queryKey={['billing', 'platform-subscriptions']}
       queryFn={async () => listPlatformResellerSubscriptions()}
       columnIds={['resellerName', 'planName', 'status', 'price', 'billingCycle']}
-    />
+ />
   );
 }
 
@@ -83,7 +83,7 @@ export function WebsiteBillingProfilesListPage() {
         'contractStartDate',
         'contractEndDate',
       ]}
-    />
+ />
   );
 }
 
@@ -108,7 +108,7 @@ export function LicenseGeneratePage() {
         const { data } = await apiClient.post('/platform/license-keys/generate', body);
         return data;
       }}
-    />
+ />
   );
 }
 
@@ -156,7 +156,7 @@ export function StripeConnectPage() {
 
   return (
     <MobileScreen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <View>
           <Typography variant="boldLarge">Agency payment setup</Typography>
           <Typography variant="medium" muted style={{ marginTop: 4 }}>
@@ -212,7 +212,7 @@ export function PlatformStripeConfigPage() {
 
   return (
     <MobileScreen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <View>
           <Typography variant="boldLarge">Platform Stripe</Typography>
           <Typography variant="medium" muted style={{ marginTop: 4 }}>

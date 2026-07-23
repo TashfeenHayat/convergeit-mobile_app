@@ -82,7 +82,7 @@ export function FilterableSearchBar({
           placeholder={placeholder}
           placeholderTextColor={tokens.colors.textPlaceholder}
           style={styles.input}
-        />
+ />
         {value ? (
           <Pressable
             accessibilityRole="button"
@@ -148,7 +148,7 @@ export function FilterableSearchBar({
                   </Pressable>
                 );
               }}
-            />
+  showsVerticalScrollIndicator={false}/>
           )}
         </View>
       ) : null}
@@ -171,7 +171,7 @@ export function FilterableSearchBar({
                   <Typography variant="medium">{item.label}</Typography>
                 </Pressable>
               )}
-            />
+  showsVerticalScrollIndicator={false}/>
           </View>
         </Pressable>
       </Modal>

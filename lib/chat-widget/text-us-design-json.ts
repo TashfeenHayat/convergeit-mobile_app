@@ -1,5 +1,11 @@
 import type { WidgetInstallationAssetUrls } from "./build-widget-install-body";
+import { textUsFormFieldsToApiPayload } from "./text-us-form-defaults";
 import type { WidgetDraft } from "./widgetDraft";
+import {
+  clampHeaderMinHeightPx,
+  clampHeaderRadiusPx,
+  normalizeHeaderMode,
+} from "@/lib/widget-runtime/header-mode";
 
 function isHttpAssetUrl(value: string | undefined): boolean {
   const v = value?.trim();
@@ -37,9 +43,9 @@ export function buildTextUsDesignJsonFromDraft(
     buttonColor: draft.textUsButtonColor?.trim() || "#1E63D5",
     position: draft.textUsPosition?.trim() || "right",
     verticalAnchor: draft.textUsVerticalAnchor === "top" ? "top" : "bottom",
-    insetBottomPx: clamp(draft.textUsInsetBottomPx ?? 28, 0, 240),
-    insetTopPx: clamp(draft.textUsInsetTopPx ?? 28, 0, 240),
-    insetSidePx: clamp(draft.textUsInsetSidePx ?? 28, 0, 240),
+    insetBottomPx: clamp(draft.textUsInsetBottomPx ?? 28, 0, 480),
+    insetTopPx: clamp(draft.textUsInsetTopPx ?? 28, 0, 480),
+    insetSidePx: clamp(draft.textUsInsetSidePx ?? 28, 0, 480),
     boxWidth: clamp(draft.textUsBoxWidth ?? 360, 280, 520),
     boxHeight: clamp(draft.textUsBoxHeight ?? 480, 320, 640),
     headerTitle:
@@ -78,9 +84,12 @@ export function buildTextUsDesignJsonFromDraft(
   if (logoUrl) textUs.headerLogoUrl = logoUrl;
 
   const logoHeight = draft.textUsHeaderLogoHeightPx ?? 28;
-  textUs.headerLogoHeightPx = clamp(logoHeight, 16, 64);
+  textUs.headerLogoHeightPx = clamp(logoHeight, 16, 96);
   textUs.headerLogoMaxWidthPx = clamp(draft.textUsHeaderLogoMaxWidthPx ?? 96, 48, 200);
   textUs.headerAlign = normalizeTextUsHeaderAlign(draft.textUsHeaderAlign);
+  textUs.headerMode = normalizeHeaderMode(draft.textUsHeaderMode);
+  textUs.headerMinHeightPx = clampHeaderMinHeightPx(draft.textUsHeaderMinHeightPx);
+  textUs.headerRadiusPx = clampHeaderRadiusPx(draft.textUsHeaderRadiusPx);
 
   const launcher: Record<string, unknown> = {};
   if (draft.textUsLauncherIconEnabled === false) {
@@ -104,6 +113,8 @@ export function buildTextUsDesignJsonFromDraft(
   const density = draft.textUsDensity?.trim() || draft.themeDesignJsonDensity?.trim();
   if (density) textUs.density = density;
 
+  textUs.fields = textUsFormFieldsToApiPayload(draft.textUsFormFields);
+
   return textUs;
 }
 
@@ -126,6 +137,9 @@ export type TextUsThemePreviewInput = {
   headerLogoHeightPx?: number;
   headerLogoMaxWidthPx?: number;
   headerAlign?: string;
+  headerMode?: "attached" | "detached";
+  headerMinHeightPx?: number;
+  headerRadiusPx?: number;
   motionEnabled?: boolean;
   panelBackground?: string;
   launcherIconPreset?: string;
@@ -159,9 +173,17 @@ export function textUsThemePreviewPayload(input: TextUsThemePreviewInput): Recor
   if (input.headerLogoHeightPx != null) theme.headerLogoHeightPx = input.headerLogoHeightPx;
   if (input.headerLogoMaxWidthPx != null) theme.headerLogoMaxWidthPx = input.headerLogoMaxWidthPx;
   if (input.headerAlign?.trim()) theme.headerAlign = normalizeTextUsHeaderAlign(input.headerAlign);
+  theme.headerMode = normalizeHeaderMode(input.headerMode);
+  theme.headerMinHeightPx = clampHeaderMinHeightPx(input.headerMinHeightPx);
+  theme.headerRadiusPx = clampHeaderRadiusPx(input.headerRadiusPx);
   if (input.motionEnabled === false) theme.motionEnabled = false;
   if (input.panelBackground?.trim()) theme.panelBackground = input.panelBackground.trim();
-  if (input.launcherIconPreset?.trim() || input.launcherStyle?.trim() || input.launcherIconEnabled === false || input.launcherGlowColor?.trim()) {
+  if (
+    input.launcherIconPreset?.trim() ||
+    input.launcherStyle?.trim() ||
+    input.launcherIconEnabled === false ||
+    input.launcherGlowColor?.trim()
+  ) {
     theme.launcher = {
       ...(input.launcherIconEnabled === false ? { iconEnabled: false } : { iconEnabled: true }),
       ...(input.launcherIconPreset?.trim() ? { iconPreset: input.launcherIconPreset.trim() } : {}),

@@ -29,6 +29,7 @@ export const WIZARD_PATCH_SCOPE_LABELS: Record<
   chat_surface: "Chat box — header, greeting, panel, banner",
   notifications_only: "Notifications — auto-open, consent, routing",
   inquiry_only: "Inquiry topics",
+  text_us_only: "Text Us — placement, branding, SMS fields",
   full: "Full config (install / publish)",
 };
 

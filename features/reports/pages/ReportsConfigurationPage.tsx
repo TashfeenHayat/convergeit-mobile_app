@@ -199,7 +199,7 @@ export function ReportsConfigurationPage() {
               </AppCard>
             );
           }}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <FormModal
@@ -216,14 +216,14 @@ export function ReportsConfigurationPage() {
           onChange={(v) => setReportType(v as ReportType)}
           options={REPORT_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
           searchable={false}
-        />
+ />
         <SelectField
           label="Frequency"
           value={scheduleType}
           onChange={(v) => setScheduleType(v as "weekly" | "monthly")}
           options={SCHEDULE_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
           searchable={false}
-        />
+ />
         {scheduleType === "weekly" ? (
           <SelectField
             label="Day of week"
@@ -231,21 +231,21 @@ export function ReportsConfigurationPage() {
             onChange={setDayOfWeek}
             options={DAY_OF_WEEK_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
             searchable={false}
-          />
+ />
         ) : (
           <InputField
             label="Day of month"
             keyboardType="number-pad"
             value={dayOfMonth}
             onChangeText={setDayOfMonth}
-          />
+ />
         )}
         <InputField
           label="Send time (HH:mm)"
           value={scheduleTime}
           onChangeText={setScheduleTime}
           placeholder="09:00"
-        />
+ />
         <InputField
           label="Recipient email"
           value={recipientEmail}
@@ -253,7 +253,7 @@ export function ReportsConfigurationPage() {
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="name@company.com"
-        />
+ />
       </FormModal>
 
       <ConfirmActionModal
@@ -271,7 +271,7 @@ export function ReportsConfigurationPage() {
             onError: (err) => Alert.alert("Could not delete", extractApiErrorMessage(err)),
           });
         }}
-      />
+ />
 
       <FormModal
         open={Boolean(shareTarget)}
@@ -303,7 +303,7 @@ export function ReportsConfigurationPage() {
           onChangeText={setShareEmail}
           autoCapitalize="none"
           keyboardType="email-address"
-        />
+ />
       </FormModal>
     </MobileScreen>
   );

@@ -165,10 +165,10 @@ export function GuestChatPage() {
                 visitorDisplayName={title}
                 agentDisplayName="Agent"
                 showEmptyPlaceholder={guest.messages.length === 0}
-              />
+ />
             </View>
 
-            <ScrollView style={{ flexGrow: 0 }}>
+            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator={false}>
               <GuestSupervisorActions
                 session={guest.session}
                 supervisorControlUserId={
@@ -184,7 +184,7 @@ export function GuestChatPage() {
                 onLiveTyping={guest.emitLiveTyping}
                 onActionComplete={() => void guest.refreshTranscript()}
                 guestSocket={guest.guestSocket}
-              />
+ />
             </ScrollView>
           </>
         ) : null}

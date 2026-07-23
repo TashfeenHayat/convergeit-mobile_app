@@ -1,11 +1,13 @@
-import type { LauncherIconPresetId } from "@/lib/chat-widget/launcher-icon-presets";
+import Ionicons from '@expo/vector-icons/Ionicons';
+
+import type { LauncherIconPresetId } from '@/lib/chat-widget/launcher-icon-presets';
 import {
   findLauncherIconPreset,
   LAUNCHER_ICON_PRESETS,
-} from "@/lib/chat-widget/launcher-icon-presets";
+} from '@/lib/chat-widget/launcher-icon-presets';
 
 export { LAUNCHER_ICON_PRESETS };
-export type { LauncherIconPresetId } from "@/lib/chat-widget/launcher-icon-presets";
+export type { LauncherIconPresetId } from '@/lib/chat-widget/launcher-icon-presets';
 
 export function LauncherPresetIcon({
   presetId,
@@ -19,6 +21,7 @@ export function LauncherPresetIcon({
   if (!presetId) return null;
   const entry = findLauncherIconPreset(presetId);
   if (!entry) return null;
-  const IconComponent = entry.Icon;
-  return <IconComponent color={color} size={fontSizePx} aria-hidden />;
+  return (
+    <Ionicons name={entry.ionicon} color={color} size={fontSizePx} />
+  );
 }

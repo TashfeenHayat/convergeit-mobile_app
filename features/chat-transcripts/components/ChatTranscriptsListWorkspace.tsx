@@ -195,7 +195,7 @@ export function ChatTranscriptsListWorkspace() {
         <PermissionDeniedPanel
           title="Chat Transcripts"
           description="Requires page:chat-monitor, page:chat-qa, or chat monitor / QA permissions."
-        />
+ />
       </View>
     );
   }
@@ -205,13 +205,13 @@ export function ChatTranscriptsListWorkspace() {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="Chat Transcripts"
           subtitle="Search by reseller, website, agent, or chat ID. Use Filters for tenant scope and date range."
           navPreset="none"
-        />
+ />
 
         <AppCard style={styles.card}>
           <View style={styles.cardHeader}>
@@ -247,7 +247,7 @@ export function ChatTranscriptsListWorkspace() {
             childCompanyOptions={scopeFilters.childCompanyOptions}
             websiteOptions={scopeFilters.websiteOptions}
             showScopeFilters={showScopeFilters}
-          />
+ />
 
           {transcripts.listQuery.isLoading ? (
             <Typography variant="small" muted style={{ paddingVertical: tokens.space.lg }}>
@@ -278,7 +278,7 @@ export function ChatTranscriptsListWorkspace() {
               page={transcripts.page}
               pageCount={Math.max(1, transcripts.totalPages)}
               onPageChange={transcripts.setPage}
-            />
+ />
           </View>
         </AppCard>
       </ChatLivePageShell>

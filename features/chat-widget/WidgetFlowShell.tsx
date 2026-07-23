@@ -23,7 +23,7 @@ export function WidgetFlowShell({
   currentStep = 0,
 }: WidgetFlowShellProps) {
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader title={pageTitle} subtitle={subtitle} navPreset="configure" />
         <WidgetWizardStepper currentStep={currentStep} />

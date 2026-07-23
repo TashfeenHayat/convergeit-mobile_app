@@ -85,7 +85,7 @@ export function ChatSettingsOperationsWorkspace() {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader title="Close Policy" subtitle="Distribution and close-out rules by website." navPreset="configure" />
         <AppCard style={styles.card}>
@@ -99,7 +99,7 @@ export function ChatSettingsOperationsWorkspace() {
             parentCompanyOptions={scopeFilters.parentCompanyOptions}
             childCompanyOptions={scopeFilters.childCompanyOptions}
             websiteOptions={scopeFilters.websiteOptions}
-          />
+ />
           <ClosePolicyListTab />
         </AppCard>
       </ChatLivePageShell>

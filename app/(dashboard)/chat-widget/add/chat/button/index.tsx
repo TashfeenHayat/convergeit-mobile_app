@@ -1,10 +1,5 @@
-import { ModulePlaceholderScreen } from '@/features/dashboard';
+import { ChatWidgetButtonDesignPage } from '@/features/chat-widget/pages/ChatWidgetButtonDesignPage';
 
 export default function Screen() {
-  return (
-    <ModulePlaceholderScreen
-      title="Button"
-      webPath="/dashboard/chat-widget/add/chat/button"
-    />
-  );
+  return <ChatWidgetButtonDesignPage />;
 }

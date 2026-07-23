@@ -89,7 +89,7 @@ export function ChatWebsiteAgentsTable({
             </Typography>
           </View>
         }
-      />
+  showsVerticalScrollIndicator={false}/>
     </ListTableCard>
   );
 }

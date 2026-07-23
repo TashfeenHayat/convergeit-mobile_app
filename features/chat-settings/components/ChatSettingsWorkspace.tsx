@@ -42,19 +42,19 @@ export function ChatSettingsWorkspace() {
         <PermissionDeniedPanel
           title="Canned messages not available"
           description="Requires page:chat-widget and chat-widget:view or chat-widget:update."
-        />
+ />
       </View>
     );
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <ChatLivePageShell>
         <ChatLivePageHeader
           title="Canned Messages"
           subtitle="Quick replies agents insert from the inbox composer."
           navPreset="configure"
-        />
+ />
         <AppCard style={styles.card}>
           <ChatScopeFiltersPanel
             compact
@@ -66,7 +66,7 @@ export function ChatSettingsWorkspace() {
             parentCompanyOptions={scopeFilters.parentCompanyOptions}
             childCompanyOptions={scopeFilters.childCompanyOptions}
             websiteOptions={scopeFilters.websiteOptions}
-          />
+ />
           <CannedResponsesTab
             rows={listQuery.data ?? []}
             loading={listQuery.isLoading}
@@ -76,7 +76,7 @@ export function ChatSettingsWorkspace() {
               publishAppToast({ message: extractApiErrorMessageForToast(e, "Request failed"), variant: "error" })
             }
             onNotifySuccess={(message) => publishAppToast({ message, variant: "success" })}
-          />
+ />
         </AppCard>
       </ChatLivePageShell>
     </ScrollView>

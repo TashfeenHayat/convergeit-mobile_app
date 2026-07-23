@@ -155,8 +155,7 @@ export function ApiResourceScreen({
             onRefresh={() => void query.refetch()}
             tintColor={theme.app.dashboard.accentBlue}
           />
-        }
-      >
+        } showsVerticalScrollIndicator={false}>
         <View style={{ gap: theme.spacing.md }}>
           <DashboardPageIntro subtitle={description}>
             {createFn && createFields?.length ? (
@@ -180,7 +179,7 @@ export function ApiResourceScreen({
               setPage(1);
             }}
             placeholder={`Search ${title.toLowerCase()}…`}
-          />
+ />
 
           {query.isError ? (
             <AppCard>
@@ -213,7 +212,7 @@ export function ApiResourceScreen({
                   getRowId={(r) => r.id}
                   minWidth={Math.max(360, columns.length * 120)}
                   emptyState={{ title: emptyTitle, description: emptyDescription, icon }}
-                />
+ />
               )}
             </ListTableCard>
           )}
@@ -248,7 +247,7 @@ export function ApiResourceScreen({
                 onChangeText={(v) => setForm((prev) => ({ ...prev, [field.key]: v }))}
                 placeholder={field.placeholder}
                 secureTextEntry={field.secure}
-              />
+ />
             ))}
           </View>
         </FormModal>

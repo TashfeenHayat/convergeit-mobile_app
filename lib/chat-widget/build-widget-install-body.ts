@@ -823,6 +823,23 @@ export function textUsDraftFieldsAsFormPayload(draft: WidgetDraft): JsonRecord[]
 }
 
 /**
+ * Text Us step PATCH: only `theme.designJson.textUs` (deep-merged).
+ * Does not touch chat launcher, panel, form, or behavior — safe for BOTH widgets.
+ */
+export function buildTextUsOnlyPatchConfig(
+  draft: WidgetDraft,
+  assetUrls?: WidgetInstallationAssetUrls,
+): JsonRecord {
+  return {
+    theme: {
+      designJson: {
+        textUs: buildTextUsDesignJsonFromDraft(draft, assetUrls),
+      },
+    },
+  };
+}
+
+/**
  * First wizard step — draft only (`publishNow: false`).
  * Use **only** fields allowed by `InstallTokenDto` on POST /widgets/installations (strict whitelist).
  * TEXT_US / CHAT / BOTH: nested theme/ui/textUsFormConfig are merged on later PATCH steps, not here.
@@ -908,7 +925,9 @@ export type ChatWidgetWizardPatchScope =
   /** Step 3: `chatMode`, `allowedDomains`, `behavior`, `session`, `form`, `response`. */
   | "notifications_only"
   /** Inquiry topics only: `behavior.inquiryOptions` (visitor-topics sync uses same helper). */
-  | "inquiry_only";
+  | "inquiry_only"
+  /** Text Us step: only `theme.designJson.textUs` (incl. SMS fields). */
+  | "text_us_only";
 
 /**
  * Body for `PATCH /widgets/:widgetKey` — `UpdateWidgetConfigurationDto`:
@@ -932,6 +951,20 @@ export function buildWidgetPatchConfigurationBody(input: {
     config: sanitizeWidgetPatchConfig(config),
     ...(embedAllowAnyOrigin !== undefined ? { embedAllowAnyOrigin } : {}),
   });
+
+  if (
+    (widgetType === "TEXT_US" || widgetType === "BOTH") &&
+    input.chatWizardPatchScope === "text_us_only"
+  ) {
+    const textUsConfig = buildTextUsOnlyPatchConfig(draft, assetUrls);
+    if (widgetType === "TEXT_US") {
+      return withConfig({
+        ...textUsConfig,
+        form: { fields: textUsDraftFieldsAsFormPayload(draft) },
+      });
+    }
+    return withConfig(textUsConfig);
+  }
 
   if (
     (widgetType === "CHAT" || widgetType === "BOTH") &&

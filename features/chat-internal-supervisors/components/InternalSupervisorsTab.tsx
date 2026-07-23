@@ -112,7 +112,7 @@ export function InternalSupervisorsTab({
                 ) : null}
               </View>
             )}
-          />
+  showsVerticalScrollIndicator={false}/>
         )}
       </InvolvementTabToolbarCard>
 
@@ -138,7 +138,7 @@ export function InternalSupervisorsTab({
             },
           );
         }}
-      />
+ />
     </>
   );
 }

@@ -118,7 +118,7 @@ export function InternalSupervisorAssignModal({
       primaryButtonDisabled={saveDisabled}
       onSave={() => onSave(selectedUserId.trim(), selectedPoolIds)}
     >
-      <ScrollView style={{ maxHeight: 420 }}>
+      <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
         <Typography variant="medium" style={{ fontWeight: "700", marginBottom: tokens.space.sm }}>
           Internal users without a pool
         </Typography>
@@ -142,7 +142,7 @@ export function InternalSupervisorAssignModal({
                 </Typography>
               </Pressable>
             )}
-          />
+  showsVerticalScrollIndicator={false}/>
         )}
 
         <Typography variant="medium" style={{ fontWeight: "700", marginTop: tokens.space.lg, marginBottom: tokens.space.sm }}>
@@ -162,7 +162,7 @@ export function InternalSupervisorAssignModal({
               checked={selectedPoolIds.includes(pool.id)}
               onChange={() => togglePool(pool.id)}
               disabled={!canEdit || saving}
-            />
+ />
           ))
         )}
       </ScrollView>

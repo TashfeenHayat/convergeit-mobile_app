@@ -206,14 +206,14 @@ export function ChatTranscriptDetailWorkspace({ conversationId }: { conversation
         <PermissionDeniedPanel
           title="Chat transcript"
           description="Requires page:chat-monitor, page:chat-qa, or chat monitor / QA permissions."
-        />
+ />
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView horizontal={false} contentContainerStyle={{ flexGrow: 1 }} style={{ flex: 1 }}>
+      <ScrollView horizontal={false} contentContainerStyle={{ flexGrow: 1 }} style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         <ChatLivePageShell variant="workstation">
           <View style={styles.topBar}>
             <Pressable
@@ -241,7 +241,7 @@ export function ChatTranscriptDetailWorkspace({ conversationId }: { conversation
                 messages={transcripts.detail?.messages ?? []}
                 meta={exportMeta}
                 disabled={transcripts.detailLoading || Boolean(transcripts.detailError)}
-              />
+ />
             </View>
             {tenantChips.length > 0 ? (
               <View style={styles.chipsRow}>
@@ -267,7 +267,7 @@ export function ChatTranscriptDetailWorkspace({ conversationId }: { conversation
               }
               currentUserId={user?.id ?? null}
               monitorReadOnly
-            />
+ />
           </View>
         </ChatLivePageShell>
       </ScrollView>

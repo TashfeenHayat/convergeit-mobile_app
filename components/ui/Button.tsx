@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { Typography } from '@/components/ui/Typography';
+import { hexAlpha, useThemeColors } from '@/lib/theme/use-theme-colors';
 import { tokens } from '@/theme/tokens';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outlined' | 'danger' | 'ghost';
@@ -23,6 +24,7 @@ export type ButtonProps = Omit<PressableProps, 'children'> & {
   style?: StyleProp<ViewStyle>;
 };
 
+/** Theme-driven button — mirrors web `Button.styles.ts` (primary / secondary / outlined / danger). */
 export function Button({
   children,
   variant = 'primary',
@@ -33,9 +35,63 @@ export function Button({
   style,
   ...rest
 }: ButtonProps) {
+  const c = useThemeColors();
   const isDisabled = disabled || loading;
-  const variantStyles = variantStyleMap[variant];
   const sizeStyles = size === 'compact' ? styles.compact : styles.defaultSize;
+
+  const variantStyles: Record<
+    ButtonVariant,
+    { idle: ViewStyle; pressed: ViewStyle; labelColor: string; spinnerColor: string }
+  > = {
+    primary: {
+      idle: { backgroundColor: c.accentBlue },
+      pressed: { backgroundColor: c.accentBlueDark },
+      labelColor: c.textPrimary,
+      spinnerColor: '#fff',
+    },
+    secondary: {
+      idle: {
+        backgroundColor: c.pillBg,
+        borderWidth: 1,
+        borderColor: c.cardBorder,
+      },
+      pressed: { backgroundColor: c.pillActive },
+      labelColor: c.textPrimary,
+      spinnerColor: c.accentBlue,
+    },
+    outlined: {
+      idle: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: c.cardBorder,
+      },
+      pressed: {
+        backgroundColor: c.isLight ? hexAlpha('#0f172a', 0.04) : 'rgba(255,255,255,0.04)',
+      },
+      labelColor: c.textPrimary,
+      spinnerColor: c.accentBlue,
+    },
+    danger: {
+      idle: {
+        backgroundColor: c.accentRed,
+        borderWidth: 1,
+        borderColor: hexAlpha(c.accentRed, 0.55),
+      },
+      pressed: { backgroundColor: hexAlpha(c.accentRed, 0.88) },
+      labelColor: '#FFFFFF',
+      spinnerColor: '#fff',
+    },
+    ghost: {
+      idle: { backgroundColor: 'transparent' },
+      pressed: {
+        backgroundColor: c.isLight ? hexAlpha('#0f172a', 0.06) : 'rgba(255,255,255,0.06)',
+      },
+      labelColor: c.accentBlue,
+      spinnerColor: c.accentBlue,
+    },
+  };
+
+  const current = variantStyles[variant];
 
   return (
     <Pressable
@@ -44,24 +100,18 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         sizeStyles,
-        variantStyles.idle,
+        current.idle,
         fullWidth && styles.fullWidth,
-        pressed && !isDisabled && variantStyles.pressed,
+        pressed && !isDisabled && current.pressed,
         isDisabled && styles.disabled,
         style,
       ]}
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator
-          color={variant === 'outlined' || variant === 'ghost' ? tokens.colors.accentBlue : '#fff'}
-        />
+        <ActivityIndicator color={current.spinnerColor} />
       ) : typeof children === 'string' ? (
-        <Typography
-          variant="button"
-          color={variantStyles.labelColor}
-          style={styles.label}
-        >
+        <Typography variant="button" color={current.labelColor} style={styles.label}>
           {children}
         </Typography>
       ) : (
@@ -100,58 +150,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-const variantStyleMap: Record<
-  ButtonVariant,
-  { idle: ViewStyle; pressed: ViewStyle; labelColor: string }
-> = {
-  primary: {
-    idle: {
-      backgroundColor: tokens.colors.accentBlue,
-    },
-    pressed: {
-      backgroundColor: tokens.colors.accentBlueDark,
-    },
-    labelColor: tokens.colors.textPrimary,
-  },
-  secondary: {
-    idle: {
-      backgroundColor: tokens.colors.pillBg,
-      borderWidth: 1,
-      borderColor: tokens.colors.cardBorder,
-    },
-    pressed: {
-      backgroundColor: tokens.colors.pillActive,
-    },
-    labelColor: tokens.colors.textPrimary,
-  },
-  outlined: {
-    idle: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: tokens.colors.cardBorder,
-    },
-    pressed: {
-      backgroundColor: 'rgba(255,255,255,0.04)',
-    },
-    labelColor: tokens.colors.textPrimary,
-  },
-  danger: {
-    idle: {
-      backgroundColor: tokens.colors.danger,
-    },
-    pressed: {
-      backgroundColor: '#DC2626',
-    },
-    labelColor: tokens.colors.textPrimary,
-  },
-  ghost: {
-    idle: {
-      backgroundColor: 'transparent',
-    },
-    pressed: {
-      backgroundColor: 'rgba(255,255,255,0.06)',
-    },
-    labelColor: tokens.colors.accentBlue,
-  },
-};

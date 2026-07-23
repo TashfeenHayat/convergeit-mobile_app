@@ -40,7 +40,7 @@ export function ReportBucketTable({ title, rows, emptyLabel = "No data" }: Props
               </Typography>
             </View>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </View>
   );

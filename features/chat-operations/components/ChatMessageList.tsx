@@ -69,7 +69,7 @@ export function ChatMessageList({
       contentContainerStyle={styles.threadContent}
       onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
       keyboardShouldPersistTaps="handled"
-    >
+     showsVerticalScrollIndicator={false}>
       {groups.map((group) => (
         <View key={group.dateKey}>
           <ChatDateDivider label={group.label} />

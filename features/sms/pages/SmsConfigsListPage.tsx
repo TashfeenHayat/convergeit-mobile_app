@@ -79,7 +79,7 @@ export function SmsConfigsListPage() {
               <TablePagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
             ) : null
           }
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );

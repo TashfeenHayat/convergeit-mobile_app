@@ -55,6 +55,7 @@ export const lightDashboardShell = (opts: {
     white90: "rgba(15, 23, 42, 0.88)",
     white95: "rgba(15, 23, 42, 0.94)",
     iconMuted: "rgba(51, 65, 85, 0.75)",
+    sidebarNavIconMuted: "rgba(51, 65, 85, 0.72)",
     pillBg: opts.top,
     pillActive: opts.sidebar,
     overlayLight: "rgba(15, 23, 42, 0.04)",

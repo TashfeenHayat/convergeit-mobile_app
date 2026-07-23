@@ -48,7 +48,7 @@ export function ChatMonitorWorkspace({ initialConversationId = null }: ChatMonit
         <PermissionDeniedPanel
           title="Chat monitor not available"
           description={`Requires ${PAGE.CHAT_MONITOR} plus a monitor scope (pool, department, parent company, or platform audit) on GET /auth/me.`}
-        />
+ />
       </View>
     );
   }
@@ -103,7 +103,7 @@ export function ChatMonitorWorkspace({ initialConversationId = null }: ChatMonit
           connected={monitor.isConnected}
           hasToken={Boolean(monitor.token)}
           loading={monitor.listsLoading}
-        />
+ />
       ) : (
         <View style={{ flex: 1, minHeight: 0 }}>
           <View style={styles.threadHeaderBar}>
@@ -127,8 +127,8 @@ export function ChatMonitorWorkspace({ initialConversationId = null }: ChatMonit
             visitorTyping={monitor.visitorTyping}
             onDismissConversation={monitor.clearSelection}
             showBackButton
-          />
-          <ScrollView style={styles.sidePanelScroll} contentContainerStyle={{ padding: tokens.space.md }}>
+ />
+          <ScrollView style={styles.sidePanelScroll} contentContainerStyle={{ padding: tokens.space.md }} showsVerticalScrollIndicator={false}>
             <MonitorSupervisorSidePanel
               conversationId={monitor.selectedConversationId}
               supervisorControlUserId={monitor.supervisorControlUserId}
@@ -137,7 +137,7 @@ export function ChatMonitorWorkspace({ initialConversationId = null }: ChatMonit
               readOnly={monitor.capabilities?.readOnly}
               onActionComplete={handleSupervisorAction}
               onMessageSent={() => monitor.refreshSelectedTranscript({ silent: true })}
-            />
+ />
           </ScrollView>
         </View>
       )}
@@ -171,31 +171,31 @@ export function ChatMonitorWorkspace({ initialConversationId = null }: ChatMonit
                 <Ionicons name="close" size={22} color={tokens.colors.textPrimary} />
               </Pressable>
             </View>
-            <ScrollView style={{ maxHeight: 420 }}>
+            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
               <FilterGroup
                 label="Website"
                 options={monitor.filterOptions.websites}
                 value={monitor.filters.websiteId}
                 onChange={(v) => monitor.setFilters((prev) => ({ ...prev, websiteId: v }))}
-              />
+ />
               <FilterGroup
                 label="Department"
                 options={monitor.filterOptions.departments}
                 value={monitor.filters.departmentId}
                 onChange={(v) => monitor.setFilters((prev) => ({ ...prev, departmentId: v }))}
-              />
+ />
               <FilterGroup
                 label="Pool"
                 options={monitor.filterOptions.pools}
                 value={monitor.filters.poolId}
                 onChange={(v) => monitor.setFilters((prev) => ({ ...prev, poolId: v }))}
-              />
+ />
               <FilterGroup
                 label="Status"
                 options={monitor.filterOptions.statuses.map((s) => ({ id: s, label: s }))}
                 value={monitor.filters.status}
                 onChange={(v) => monitor.setFilters((prev) => ({ ...prev, status: v }))}
-              />
+ />
             </ScrollView>
             <Button variant="outlined" size="compact" onPress={clearFilters} style={{ marginTop: 12 }}>
               Clear all filters

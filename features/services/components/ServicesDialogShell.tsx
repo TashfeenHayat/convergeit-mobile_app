@@ -33,7 +33,7 @@ export function ServicesDialogShell({ open, title, onClose, children }: Services
               <Ionicons name="close" size={20} color={tokens.colors.textSecondary} />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.body}>{children}</ScrollView>
+          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>{children}</ScrollView>
         </View>
       </View>
     </Modal>

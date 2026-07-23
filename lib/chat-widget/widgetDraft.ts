@@ -129,6 +129,9 @@ export interface WidgetDraft {
   textUsHeaderLogoMaxWidthPx?: number;
   /** Header logo + title alignment inside the panel bar. */
   textUsHeaderAlign?: "left" | "center" | "right";
+  textUsHeaderMode?: "attached" | "detached";
+  textUsHeaderMinHeightPx?: number;
+  textUsHeaderRadiusPx?: number;
   /** Glow halo color when `textUsLauncherStyle` is glow — defaults to button color. */
   textUsGlowColor?: string;
   textUsLauncherIconPreset?: LauncherIconPresetId;
@@ -332,6 +335,9 @@ export const defaultWidgetDraft: WidgetDraft = {
   textUsHeaderLogoHeightPx: 28,
   textUsHeaderLogoMaxWidthPx: 96,
   textUsHeaderAlign: "left",
+  textUsHeaderMode: "attached",
+  textUsHeaderMinHeightPx: 44,
+  textUsHeaderRadiusPx: 12,
   textUsGlowColor: "",
   textUsLauncherIconPreset: "phosphor-chat-circle",
   textUsLauncherIconEnabled: true,

@@ -112,7 +112,7 @@ export function PlatformMailAssignmentsTable() {
               refreshing={listQuery.isRefetching && !listQuery.isLoading}
               onRefresh={() => void listQuery.refetch()}
               tintColor={theme.app.dashboard.accentBlue}
-            />
+          />
           }
           contentContainerStyle={{ gap: theme.spacing.sm }}
           ListEmptyComponent={
@@ -133,7 +133,7 @@ export function PlatformMailAssignmentsTable() {
                 <StatusChip
                   label={item.isEnabled ? "Enabled" : "Disabled"}
                   tone={item.isEnabled ? "success" : "neutral"}
-                />
+ />
               </View>
               <Typography variant="small" muted>
                 {providerLabel(item)} ·{" "}
@@ -166,7 +166,7 @@ export function PlatformMailAssignmentsTable() {
               </View>
             </AppCard>
           )}
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
 
       <PlatformMailAssignmentModal
@@ -180,7 +180,7 @@ export function PlatformMailAssignmentsTable() {
           setEditResellerLabel("");
         }}
         onSaved={() => void listQuery.refetch()}
-      />
+ />
 
       <ConfirmActionModal
         open={Boolean(deleteTarget)}
@@ -205,7 +205,7 @@ export function PlatformMailAssignmentsTable() {
             Alert.alert("Failed", extractApiErrorMessage(err));
           }
         }}
-      />
+ />
     </View>
   );
 }
@@ -291,7 +291,7 @@ function PlatformMailAssignmentModal({
                 ? resellerOptions
                 : [{ value: "", label: resellersQuery.isLoading ? "Loading…" : "No resellers" }]
             }
-          />
+ />
         )}
 
         {activeId ? (

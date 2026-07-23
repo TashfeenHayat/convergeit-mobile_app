@@ -2,7 +2,6 @@ import type { ReactElement, ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   View,
   type RefreshControlProps,
@@ -14,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useDashboardChromeInset } from '@/components/layout/DashboardChromeContext';
+import { AppScrollView } from '@/components/ui/AppScroll';
 import { useAppTheme } from '@/theme';
 
 export type MobileScreenProps = {
@@ -30,7 +30,8 @@ export type MobileScreenProps = {
 
 /**
  * Standard mobile screen chrome — safe area, optional scroll + keyboard avoid.
- * Use inside drawer/stack screens for consistent padding on iOS & Android.
+ * Horizontal inset is always `theme.spacing.screen` (8px) unless `flush`.
+ * Vertical scrollbar is always hidden via AppScrollView defaults.
  */
 export function MobileScreen({
   children,
@@ -45,25 +46,31 @@ export function MobileScreen({
   const dashboardInset = useDashboardChromeInset();
   const pad = flush ? 0 : theme.spacing.screen;
   const topInset = dashboardInset > 0 ? dashboardInset : theme.spacing.md;
+  /** Web `appBackground` — never contentBgStops (those are chrome greys). */
+  const g0 = theme.app.background.top;
+  const g1 = theme.app.background.bottom;
+
+  /** Applied last so horizontal gutter cannot drift per page. */
+  const gutterStyle = {
+    paddingHorizontal: pad,
+    paddingTop: topInset,
+  } as const;
 
   const body = scroll ? (
-    <ScrollView
+    <AppScrollView
       keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
       refreshControl={refreshControl}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingHorizontal: pad, paddingBottom: theme.spacing.md },
         contentStyle,
-        { paddingTop: topInset },
+        gutterStyle,
+        { paddingBottom: theme.spacing.md },
       ]}
     >
       {children}
-    </ScrollView>
+    </AppScrollView>
   ) : (
-    <View style={[{ flex: 1, paddingHorizontal: pad }, contentStyle, { paddingTop: topInset }]}>
-      {children}
-    </View>
+    <View style={[styles.flex, contentStyle, gutterStyle]}>{children}</View>
   );
 
   const wrapped = keyboard ? (
@@ -78,10 +85,11 @@ export function MobileScreen({
   );
 
   return (
-    <SafeAreaView style={[styles.flex, style]} edges={['bottom']}>
+    <SafeAreaView style={[styles.flex, { backgroundColor: g0 }, style]} edges={['bottom']}>
       <StatusBar style={theme.paletteMode === 'light' ? 'dark' : 'light'} />
+      {/* Match web Discord: linear-gradient(180deg, #050508 → #0a0a2c) */}
       <LinearGradient
-        colors={[theme.app.background.top, theme.app.background.bottom]}
+        colors={[g0, g1]}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}

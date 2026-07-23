@@ -206,9 +206,16 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   },
   {
     permission: PAGE.PHONE_NUMBER_SETUP,
-    href: "/dashboard/phone-number-setup",
+    href: "/dashboard/text-us",
     iconKey: "chatWidget",
     label: "Text Us",
+    prefixMatch: true,
+  },
+  {
+    permission: PAGE.PHONE_NUMBER_SETUP,
+    href: "/dashboard/phone-number-setup",
+    iconKey: "chatWidget",
+    label: "Phone Number Setup",
     prefixMatch: true,
   },
 
@@ -463,6 +470,7 @@ const DASHBOARD_URL_SEGMENT_TO_PAGE: Readonly<Record<string, PagePermission>> = 
   "crm-integrator": "page:crm-integration",
   "distribution-setup": "page:distribution-setup",
   "phone-number-setup": PAGE.PHONE_NUMBER_SETUP,
+  "text-us": PAGE.PHONE_NUMBER_SETUP,
   "ip-block-list": "page:ip-blocklist",
   "license-generate": "page:licenses",
   reports: PAGE.REPORTS,

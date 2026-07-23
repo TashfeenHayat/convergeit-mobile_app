@@ -56,7 +56,7 @@ export function PocListPage() {
         <PermissionDeniedPanel
           title="POC directory not available"
           description="You do not have permission to view the points of contact directory."
-        />
+ />
       </MobileScreen>
     );
   }
@@ -72,8 +72,7 @@ export function PocListPage() {
             onRefresh={() => void query.refetch()}
             tintColor={theme.app.dashboard.accentBlue}
           />
-        }
-      >
+        } showsVerticalScrollIndicator={false}>
         <DashboardPageIntro subtitle="Browse by reseller and company — multiple POCs grouped under each child company." />
 
         {query.isError && !query.data ? (
@@ -93,7 +92,7 @@ export function PocListPage() {
               uniqueOrganizations={stats.uniqueOrganizations}
               filteredCount={filteredRows.length}
               isFiltering={isFiltering}
-            />
+ />
 
             <PocHierarchySection
               search={search}
@@ -102,7 +101,7 @@ export function PocListPage() {
               allRowsCount={allRows.length}
               isLoading={query.isLoading && !query.data}
               errorMessage={errorMessage}
-            />
+ />
           </>
         )}
       </ScrollView>

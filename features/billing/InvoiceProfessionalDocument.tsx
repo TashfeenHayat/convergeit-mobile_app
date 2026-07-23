@@ -52,7 +52,7 @@ export function InvoiceProfessionalDocument({ invoice }: Props) {
       <Meta
         label="Period"
         value={`${invoice.periodStart?.slice(0, 10) ?? "—"} → ${invoice.periodEnd?.slice(0, 10) ?? "—"}`}
-      />
+ />
 
       <View style={styles.divider} />
 
@@ -82,7 +82,7 @@ export function InvoiceProfessionalDocument({ invoice }: Props) {
             </Typography>
           </View>
         )}
-      />
+  showsVerticalScrollIndicator={false}/>
 
       <View style={styles.totalRow}>
         <Typography variant="medium16" style={{ fontWeight: "700" }}>

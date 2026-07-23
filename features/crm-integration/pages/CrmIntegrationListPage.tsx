@@ -120,7 +120,7 @@ export function CrmIntegrationListPage() {
               <TablePagination page={page} pageCount={totalPages} onPageChange={setPage} />
             ) : null
           }
-        />
+  showsVerticalScrollIndicator={false}/>
       )}
     </MobileScreen>
   );
